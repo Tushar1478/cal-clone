@@ -10,6 +10,7 @@ import EventTypesPage from "./pages/EventTypesPage";
 import AvailabilityPage from "./pages/AvailabilityPage";
 import BookingsPage from "./pages/BookingsPage";
 import PublicBookingPage from "./pages/PublicBookingPage";
+import PublicProfilePage from "./pages/PublicProfilePage";
 import SettingsPage from "./pages/SettingsPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import NotFound from "./pages/NotFound";
@@ -33,6 +34,7 @@ const App = () => {
             <Route path="/availability" element={<AvailabilityPage />} />
             <Route path="/bookings" element={<BookingsPage />} />
             <Route path="/book/:slug" element={<PublicBookingPage />} />
+            <Route path="/public" element={<PublicProfilePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/analytics" element={<AnalyticsPage />} />
             <Route path="*" element={<NotFound />} />

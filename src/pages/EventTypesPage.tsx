@@ -9,13 +9,14 @@ import {
   Trash2,
   Clock,
   Share2,
-  Eye,
   EyeOff,
   Files,
   Shield,
+  Search,
+  Link as LinkIcon,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { EventType, EVENT_COLORS, DURATION_OPTIONS, BUFFER_OPTIONS } from "@/lib/types";
+import { EventType, EVENT_COLORS, DURATION_OPTIONS, BUFFER_OPTIONS, CustomQuestion } from "@/lib/types";
 import {
   getEventTypes,
   saveEventType,
@@ -61,7 +62,6 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { CustomQuestion } from "@/lib/types";
 
 export default function EventTypesPage() {
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
@@ -69,8 +69,7 @@ export default function EventTypesPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<EventType | null>(null);
-  const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [shareSlug, setShareSlug] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const profile = getProfile();
   const [form, setForm] = useState({
     title: "",
@@ -135,7 +134,6 @@ export default function EventTypesPage() {
       .replace(/[^a-z0-9-]/g, "-")
       .replace(/^-+|-+$/g, "");
 
-    // Check for duplicate slugs
     const existing = getEventTypes().find(
       (e) => e.slug === slug && e.id !== editing?.id
     );
@@ -182,7 +180,6 @@ export default function EventTypesPage() {
   const handleToggle = (et: EventType) => {
     saveEventType({ ...et, isActive: !et.isActive });
     refresh();
-    toast.success(et.isActive ? "Event type disabled" : "Event type enabled");
   };
 
   const handleDuplicate = (id: string) => {
@@ -193,12 +190,7 @@ export default function EventTypesPage() {
 
   const copyLink = (slug: string) => {
     navigator.clipboard.writeText(`${window.location.origin}/book/${slug}`);
-    toast.success("Booking link copied to clipboard");
-  };
-
-  const openShare = (slug: string) => {
-    setShareSlug(slug);
-    setShareDialogOpen(true);
+    toast.success("Link copied to clipboard");
   };
 
   const addQuestion = () => {
@@ -206,12 +198,7 @@ export default function EventTypesPage() {
       ...form,
       customQuestions: [
         ...form.customQuestions,
-        {
-          id: crypto.randomUUID(),
-          label: "",
-          type: "text",
-          required: false,
-        },
+        { id: crypto.randomUUID(), label: "", type: "text", required: false },
       ],
     });
   };
@@ -229,30 +216,48 @@ export default function EventTypesPage() {
     });
   };
 
-  const activeTypes = eventTypes.filter((e) => e.isActive);
-  const inactiveTypes = eventTypes.filter((e) => !e.isActive);
+  const filtered = eventTypes.filter((et) => {
+    if (!searchQuery) return true;
+    return et.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+           et.slug.toLowerCase().includes(searchQuery.toLowerCase());
+  });
+
+  const activeTypes = filtered.filter((e) => e.isActive);
+  const inactiveTypes = filtered.filter((e) => !e.isActive);
 
   return (
     <DashboardLayout>
-      <div className="flex items-center justify-between mb-6">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Event Types</h1>
+          <h1 className="text-xl font-bold text-foreground">Event types</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Create events to share for people to book on your calendar.
+            Configure different events for people to book on your calendar.
           </p>
         </div>
-        <Button onClick={openCreate} size="sm" className="gap-1.5">
-          <Plus className="h-4 w-4" />
-          New
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="relative hidden sm:block">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 w-44 h-9 text-sm bg-secondary border-border"
+            />
+          </div>
+          <Button onClick={openCreate} size="sm" className="gap-1.5 h-9">
+            <Plus className="h-4 w-4" />
+            New
+          </Button>
+        </div>
       </div>
 
-      {/* Active Event Types */}
+      {/* Event Types List */}
       <div className="cal-card overflow-hidden divide-y divide-border">
-        {eventTypes.length === 0 && (
+        {filtered.length === 0 && eventTypes.length === 0 && (
           <div className="px-6 py-16 text-center">
             <div className="mx-auto w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-3">
-              <Clock className="h-5 w-5 text-muted-foreground" />
+              <LinkIcon className="h-5 w-5 text-muted-foreground" />
             </div>
             <p className="text-sm font-medium text-foreground mb-1">
               No event types yet
@@ -262,56 +267,49 @@ export default function EventTypesPage() {
             </p>
             <Button onClick={openCreate} variant="outline" size="sm" className="gap-1.5">
               <Plus className="h-4 w-4" />
-              Create event type
+              New event type
             </Button>
           </div>
         )}
-        {activeTypes.map((et) => (
+        {filtered.length === 0 && eventTypes.length > 0 && (
+          <div className="px-6 py-12 text-center">
+            <p className="text-sm text-muted-foreground">No matching event types.</p>
+          </div>
+        )}
+
+        {/* Inactive first (like Cal.com shows hidden on top) */}
+        {inactiveTypes.map((et) => (
           <EventTypeRow
             key={et.id}
             et={et}
+            profile={profile}
             onEdit={openEdit}
             onToggle={handleToggle}
             onDelete={confirmDelete}
             onDuplicate={handleDuplicate}
             onCopyLink={copyLink}
-            onShare={openShare}
+          />
+        ))}
+        {activeTypes.map((et) => (
+          <EventTypeRow
+            key={et.id}
+            et={et}
             profile={profile}
+            onEdit={openEdit}
+            onToggle={handleToggle}
+            onDelete={confirmDelete}
+            onDuplicate={handleDuplicate}
+            onCopyLink={copyLink}
           />
         ))}
       </div>
 
-      {/* Inactive Event Types */}
-      {inactiveTypes.length > 0 && (
-        <>
-          <h2 className="text-sm font-semibold text-muted-foreground mt-8 mb-3 flex items-center gap-2">
-            <EyeOff className="h-3.5 w-3.5" />
-            Disabled ({inactiveTypes.length})
-          </h2>
-          <div className="cal-card overflow-hidden divide-y divide-border">
-            {inactiveTypes.map((et) => (
-              <EventTypeRow
-                key={et.id}
-                et={et}
-                onEdit={openEdit}
-                onToggle={handleToggle}
-                onDelete={confirmDelete}
-                onDuplicate={handleDuplicate}
-                onCopyLink={copyLink}
-                onShare={openShare}
-                profile={profile}
-              />
-            ))}
-          </div>
-        </>
-      )}
-
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto bg-card border-border">
           <DialogHeader>
             <DialogTitle>
-              {editing ? "Edit Event Type" : "New Event Type"}
+              {editing ? "Edit event type" : "New event type"}
             </DialogTitle>
             <DialogDescription>
               {editing
@@ -320,8 +318,8 @@ export default function EventTypesPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <Tabs defaultValue="general" className="mt-2">
-            <TabsList className="grid grid-cols-3 w-full">
+          <Tabs defaultValue="general" className="mt-1">
+            <TabsList className="grid grid-cols-3 w-full bg-secondary">
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="advanced">Advanced</TabsTrigger>
               <TabsTrigger value="questions">Questions</TabsTrigger>
@@ -345,20 +343,20 @@ export default function EventTypesPage() {
                             .replace(/^-|-$/g, ""),
                     });
                   }}
+                  className="mt-1"
                 />
               </div>
               <div>
                 <Label>URL Slug *</Label>
-                <div className="flex items-center gap-1">
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                    /book/
+                <div className="flex items-center gap-0 mt-1">
+                  <span className="text-sm text-muted-foreground bg-secondary border border-r-0 border-border rounded-l-md px-3 py-2 h-10 flex items-center">
+                    /{profile.username}/
                   </span>
                   <Input
                     placeholder="quick-chat"
                     value={form.slug}
-                    onChange={(e) =>
-                      setForm({ ...form, slug: e.target.value })
-                    }
+                    onChange={(e) => setForm({ ...form, slug: e.target.value })}
+                    className="rounded-l-none"
                   />
                 </div>
               </div>
@@ -367,10 +365,9 @@ export default function EventTypesPage() {
                 <Textarea
                   placeholder="A brief description of this event..."
                   value={form.description}
-                  onChange={(e) =>
-                    setForm({ ...form, description: e.target.value })
-                  }
+                  onChange={(e) => setForm({ ...form, description: e.target.value })}
                   rows={3}
+                  className="mt-1"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -378,17 +375,15 @@ export default function EventTypesPage() {
                   <Label>Duration</Label>
                   <Select
                     value={String(form.duration)}
-                    onValueChange={(v) =>
-                      setForm({ ...form, duration: Number(v) })
-                    }
+                    onValueChange={(v) => setForm({ ...form, duration: Number(v) })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {DURATION_OPTIONS.map((d) => (
                         <SelectItem key={d} value={String(d)}>
-                          {d} minutes
+                          {d} min
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -403,7 +398,7 @@ export default function EventTypesPage() {
                         type="button"
                         className={`h-6 w-6 rounded-full border-2 transition-all ${
                           form.color === c
-                            ? "border-foreground scale-110 ring-2 ring-foreground/20"
+                            ? "border-foreground scale-110"
                             : "border-transparent hover:scale-105"
                         }`}
                         style={{ backgroundColor: c }}
@@ -418,14 +413,12 @@ export default function EventTypesPage() {
             <TabsContent value="advanced" className="space-y-4 pt-3">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label>Buffer before (min)</Label>
+                  <Label>Buffer before</Label>
                   <Select
                     value={String(form.bufferBefore)}
-                    onValueChange={(v) =>
-                      setForm({ ...form, bufferBefore: Number(v) })
-                    }
+                    onValueChange={(v) => setForm({ ...form, bufferBefore: Number(v) })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -438,14 +431,12 @@ export default function EventTypesPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label>Buffer after (min)</Label>
+                  <Label>Buffer after</Label>
                   <Select
                     value={String(form.bufferAfter)}
-                    onValueChange={(v) =>
-                      setForm({ ...form, bufferAfter: Number(v) })
-                    }
+                    onValueChange={(v) => setForm({ ...form, bufferAfter: Number(v) })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -460,7 +451,7 @@ export default function EventTypesPage() {
               </div>
               <div>
                 <Label>Minimum notice (hours)</Label>
-                <p className="text-xs text-muted-foreground mb-1.5">
+                <p className="text-xs text-muted-foreground mb-1">
                   How far in advance must bookings be made?
                 </p>
                 <Input
@@ -468,45 +459,35 @@ export default function EventTypesPage() {
                   min={0}
                   max={720}
                   value={form.minNotice}
-                  onChange={(e) =>
-                    setForm({ ...form, minNotice: Number(e.target.value) })
-                  }
+                  onChange={(e) => setForm({ ...form, minNotice: Number(e.target.value) })}
                 />
               </div>
               <div>
-                <Label>Future booking limit (days)</Label>
-                <p className="text-xs text-muted-foreground mb-1.5">
-                  How far in the future can someone book?
+                <Label>Booking window (days)</Label>
+                <p className="text-xs text-muted-foreground mb-1">
+                  How far into the future can someone book?
                 </p>
                 <Input
                   type="number"
                   min={1}
                   max={365}
                   value={form.maxFutureDays}
-                  onChange={(e) =>
-                    setForm({ ...form, maxFutureDays: Number(e.target.value) })
-                  }
+                  onChange={(e) => setForm({ ...form, maxFutureDays: Number(e.target.value) })}
                 />
               </div>
             </TabsContent>
 
             <TabsContent value="questions" className="space-y-4 pt-3">
               <p className="text-sm text-muted-foreground">
-                Add custom questions to collect information from the person
-                booking.
+                Add custom questions to collect info from the booker.
               </p>
               {form.customQuestions.map((q, idx) => (
-                <div
-                  key={q.id}
-                  className="border border-border rounded-md p-3 space-y-2"
-                >
-                  <div className="flex items-start justify-between gap-2">
+                <div key={q.id} className="border border-border rounded-lg p-3 space-y-2 bg-secondary/30">
+                  <div className="flex items-start gap-2">
                     <Input
                       placeholder="Question label"
                       value={q.label}
-                      onChange={(e) =>
-                        updateQuestion(idx, { label: e.target.value })
-                      }
+                      onChange={(e) => updateQuestion(idx, { label: e.target.value })}
                       className="flex-1"
                     />
                     <Button
@@ -521,13 +502,9 @@ export default function EventTypesPage() {
                   <div className="flex items-center gap-3">
                     <Select
                       value={q.type}
-                      onValueChange={(v) =>
-                        updateQuestion(idx, {
-                          type: v as "text" | "textarea" | "select",
-                        })
-                      }
+                      onValueChange={(v) => updateQuestion(idx, { type: v as "text" | "textarea" | "select" })}
                     >
-                      <SelectTrigger className="w-32">
+                      <SelectTrigger className="w-32 h-8 text-xs">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -540,41 +517,27 @@ export default function EventTypesPage() {
                       <input
                         type="checkbox"
                         checked={q.required}
-                        onChange={(e) =>
-                          updateQuestion(idx, { required: e.target.checked })
-                        }
-                        className="rounded"
+                        onChange={(e) => updateQuestion(idx, { required: e.target.checked })}
+                        className="rounded border-border"
                       />
                       Required
                     </label>
                   </div>
                   {q.type === "select" && (
-                    <div>
-                      <Label className="text-xs">
-                        Options (comma separated)
-                      </Label>
-                      <Input
-                        placeholder="Option 1, Option 2, Option 3"
-                        value={q.options?.join(", ") || ""}
-                        onChange={(e) =>
-                          updateQuestion(idx, {
-                            options: e.target.value
-                              .split(",")
-                              .map((o) => o.trim())
-                              .filter(Boolean),
-                          })
-                        }
-                      />
-                    </div>
+                    <Input
+                      placeholder="Option 1, Option 2, Option 3"
+                      value={q.options?.join(", ") || ""}
+                      onChange={(e) =>
+                        updateQuestion(idx, {
+                          options: e.target.value.split(",").map((o) => o.trim()).filter(Boolean),
+                        })
+                      }
+                      className="text-xs"
+                    />
                   )}
                 </div>
               ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={addQuestion}
-                className="gap-1.5"
-              >
+              <Button variant="outline" size="sm" onClick={addQuestion} className="gap-1.5">
                 <Plus className="h-3.5 w-3.5" />
                 Add question
               </Button>
@@ -586,7 +549,7 @@ export default function EventTypesPage() {
               Cancel
             </Button>
             <Button onClick={handleSave}>
-              {editing ? "Save changes" : "Create"}
+              {editing ? "Save" : "Create"}
             </Button>
           </div>
         </DialogContent>
@@ -594,12 +557,11 @@ export default function EventTypesPage() {
 
       {/* Delete Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete event type?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this event type. Anyone with the
-              booking link will no longer be able to book.
+              This action cannot be undone. Anyone with the link will no longer be able to book.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -613,124 +575,74 @@ export default function EventTypesPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Share Dialog */}
-      <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Share your booking link</DialogTitle>
-            <DialogDescription>
-              Share this link with anyone you'd like to book a meeting with.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Input
-                readOnly
-                value={`${window.location.origin}/book/${shareSlug}`}
-                className="text-sm"
-              />
-              <Button size="sm" onClick={() => copyLink(shareSlug)}>
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 text-xs" asChild>
-                <a
-                  href={`mailto:?subject=Book a meeting with ${profile.name}&body=Book a meeting with me: ${window.location.origin}/book/${shareSlug}`}
-                >
-                  Share via Email
-                </a>
-              </Button>
-              <Button variant="outline" size="sm" className="flex-1 text-xs" asChild>
-                <Link to={`/book/${shareSlug}`} target="_blank">
-                  Open Preview
-                </Link>
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
     </DashboardLayout>
   );
 }
 
+// ─── Event Type Row ────────────────────────────────────────
+
 function EventTypeRow({
   et,
+  profile,
   onEdit,
   onToggle,
   onDelete,
   onDuplicate,
   onCopyLink,
-  onShare,
-  profile,
 }: {
   et: EventType;
+  profile: { username: string };
   onEdit: (et: EventType) => void;
   onToggle: (et: EventType) => void;
   onDelete: (id: string) => void;
   onDuplicate: (id: string) => void;
   onCopyLink: (slug: string) => void;
-  onShare: (slug: string) => void;
-  profile: { username: string };
 }) {
   return (
-    <div
-      className={`flex items-center justify-between px-5 py-4 hover:bg-cal-subtle transition-colors group ${
-        !et.isActive ? "opacity-50" : ""
-      }`}
-    >
-      <div className="flex items-center gap-4 min-w-0 flex-1">
-        <div
-          className="w-1 h-12 rounded-full flex-shrink-0"
-          style={{ backgroundColor: et.color }}
-        />
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-sm font-semibold text-foreground truncate">
-              {et.title}
-            </h3>
-          </div>
-          <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-md">
-            {et.description || "No description"}
-          </p>
-          <div className="flex items-center gap-3 mt-1 flex-wrap">
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Clock className="h-3 w-3" />
-              {et.duration}m
-            </span>
-            <span className="text-xs text-muted-foreground font-mono">
-              /{et.slug}
-            </span>
-            {(et.bufferBefore > 0 || et.bufferAfter > 0) && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Shield className="h-3 w-3" />
-                {et.bufferBefore > 0 && `${et.bufferBefore}m before`}
-                {et.bufferBefore > 0 && et.bufferAfter > 0 && " · "}
-                {et.bufferAfter > 0 && `${et.bufferAfter}m after`}
-              </span>
-            )}
-          </div>
+    <div className="flex items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors group">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <h3 className="text-sm font-bold text-foreground">{et.title}</h3>
+          <span className="text-xs text-muted-foreground font-mono">
+            /{profile.username}/{et.slug}
+          </span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="cal-badge bg-secondary text-muted-foreground">
+            <Clock className="h-3 w-3 mr-1" />
+            {et.duration}m
+          </span>
         </div>
       </div>
+
       <div className="flex items-center gap-1.5 shrink-0">
+        {!et.isActive && (
+          <span className="text-xs text-muted-foreground mr-2 font-medium">Hidden</span>
+        )}
+        <Switch
+          checked={et.isActive}
+          onCheckedChange={() => onToggle(et)}
+        />
+        <Link to={`/book/${et.slug}`} target="_blank">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+            <ExternalLink className="h-4 w-4" />
+          </Button>
+        </Link>
         <Button
           variant="ghost"
-          size="sm"
-          className="hidden sm:flex gap-1.5 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
           onClick={() => onCopyLink(et.slug)}
         >
-          <Copy className="h-3.5 w-3.5" />
-          Copy
+          <LinkIcon className="h-4 w-4" />
         </Button>
-        <Switch checked={et.isActive} onCheckedChange={() => onToggle(et)} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48">
+          <DropdownMenuContent align="end" className="w-44 bg-popover border-border">
             <DropdownMenuItem onClick={() => onEdit(et)}>
               <Pencil className="h-4 w-4 mr-2" />
               Edit
@@ -743,16 +655,6 @@ function EventTypeRow({
               <Copy className="h-4 w-4 mr-2" />
               Copy link
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onShare(et.slug)}>
-              <Share2 className="h-4 w-4 mr-2" />
-              Share
-            </DropdownMenuItem>
-            <Link to={`/book/${et.slug}`} target="_blank">
-              <DropdownMenuItem>
-                <ExternalLink className="h-4 w-4 mr-2" />
-                Preview
-              </DropdownMenuItem>
-            </Link>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => onDelete(et.id)}
