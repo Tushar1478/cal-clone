@@ -8,7 +8,7 @@ import {
   formatTime,
   formatDateShort,
   formatDateFull,
-  rescheduleBooking as rescheduleBookingFn,
+  rescheduleTarget as rescheduleBookingFn,
   getEventType,
   getAvailableSlots,
   getAvailability,
@@ -109,7 +109,7 @@ export default function BookingsPage() {
   };
 
   const openReschedule = (booking: Booking) => {
-    setRescheduleBookingState(booking);
+    setRescheduleTarget(booking);
     setRescheduleDate("");
     setRescheduleTime("");
     setRescheduleSlots([]);
@@ -119,8 +119,8 @@ export default function BookingsPage() {
   const handleRescheduleDateChange = (date: string) => {
     setRescheduleDate(date);
     setRescheduleTime("");
-    if (rescheduleBooking) {
-      const et = getEventType(rescheduleBooking.eventTypeId);
+    if (rescheduleTarget) {
+      const et = getEventType(rescheduleTarget.eventTypeId);
       if (et) {
         const slots = getAvailableSlots(date, et.duration, et.bufferBefore, et.bufferAfter, et.minNotice);
         setRescheduleSlots(slots);
@@ -129,11 +129,11 @@ export default function BookingsPage() {
   };
 
   const handleReschedule = () => {
-    if (!rescheduleBooking || !rescheduleDate || !rescheduleTime) {
+    if (!rescheduleTarget || !rescheduleDate || !rescheduleTime) {
       toast.error("Please select a date and time");
       return;
     }
-    const et = getEventType(rescheduleBooking.eventTypeId);
+    const et = getEventType(rescheduleTarget.eventTypeId);
     if (!et) return;
 
     const startMinutes =
@@ -142,7 +142,7 @@ export default function BookingsPage() {
     const endMinutes = startMinutes + et.duration;
     const endTime = `${String(Math.floor(endMinutes / 60)).padStart(2, "0")}:${String(endMinutes % 60).padStart(2, "0")}`;
 
-    rescheduleBooking(rescheduleBooking.id, rescheduleDate, rescheduleTime, endTime);
+    rescheduleBookingFn(rescheduleTarget.id, rescheduleDate, rescheduleTime, endTime);
     refreshBookings();
     setRescheduleDialogOpen(false);
     toast.success("Booking rescheduled");
@@ -466,10 +466,10 @@ export default function BookingsPage() {
           <DialogHeader>
             <DialogTitle>Reschedule booking</DialogTitle>
             <DialogDescription>
-              {rescheduleBooking && (
+              {rescheduleTarget && (
                 <>
-                  Rescheduling {rescheduleBooking.eventTypeTitle} with{" "}
-                  {rescheduleBooking.bookerName}
+                  Rescheduling {rescheduleTarget.eventTypeTitle} with{" "}
+                  {rescheduleTarget.bookerName}
                 </>
               )}
             </DialogDescription>
