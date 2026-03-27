@@ -8,7 +8,7 @@ import {
   formatTime,
   formatDateShort,
   formatDateFull,
-  rescheduleBooking,
+  rescheduleBooking as rescheduleBookingFn,
   getEventType,
   getAvailableSlots,
   getAvailability,
