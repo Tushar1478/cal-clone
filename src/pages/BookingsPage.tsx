@@ -70,7 +70,7 @@ export default function BookingsPage() {
 
   // Reschedule state
   const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
-  const [rescheduleBooking, setRescheduleBookingState] = useState<Booking | null>(null);
+  const [rescheduleTarget, setRescheduleTarget] = useState<Booking | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [rescheduleTime, setRescheduleTime] = useState("");
   const [rescheduleSlots, setRescheduleSlots] = useState<string[]>([]);
