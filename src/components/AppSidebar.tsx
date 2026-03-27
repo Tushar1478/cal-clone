@@ -8,15 +8,32 @@ import {
   BarChart3,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
+  Copy,
+  Gift,
+  Search,
+  ChevronDown,
+  Grid3X3,
+  Zap,
+  Route,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 import { getProfile } from "@/lib/store";
+import { toast } from "sonner";
 
-const navItems = [
-  { path: "/event-types", label: "Event Types", icon: LinkIcon },
+const mainNav = [
+  { path: "/event-types", label: "Event types", icon: LinkIcon },
   { path: "/bookings", label: "Bookings", icon: CalendarDays },
   { path: "/availability", label: "Availability", icon: Clock },
-  { path: "/analytics", label: "Insights", icon: BarChart3 },
+];
+
+const moreNav = [
+  { path: "/analytics", label: "Insights", icon: BarChart3, hasChevron: true },
+];
+
+const bottomNav = [
+  { path: "/public", label: "View public page", icon: ExternalLink },
   { path: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -25,29 +42,40 @@ export default function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const profile = getProfile();
 
+  const copyPublicLink = () => {
+    navigator.clipboard.writeText(`${window.location.origin}/${profile.username}`);
+    toast.success("Link copied to clipboard");
+  };
+
   return (
     <aside
-      className={`hidden md:flex flex-col border-r border-border bg-background h-screen fixed left-0 top-0 z-30 transition-all duration-200 ${
-        collapsed ? "w-16" : "w-56"
+      className={`hidden md:flex flex-col border-r border-border bg-sidebar h-screen fixed left-0 top-0 z-30 transition-all duration-200 ${
+        collapsed ? "w-[60px]" : "w-[240px]"
       }`}
     >
-      {/* Logo */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-border">
-        <div className="flex items-center gap-2 overflow-hidden">
-          <div className="h-8 w-8 rounded-lg bg-foreground flex items-center justify-center flex-shrink-0">
-            <Calendar className="h-4 w-4 text-background" />
-          </div>
-          {!collapsed && (
-            <span className="text-base font-bold tracking-tight text-foreground whitespace-nowrap">
-              Cal.com
-            </span>
-          )}
+      {/* User avatar & name */}
+      <div className="flex items-center gap-2 px-3 py-3 border-b border-border">
+        <div className="h-8 w-8 rounded-full bg-[hsl(240,60%,60%)] flex items-center justify-center flex-shrink-0">
+          <span className="text-xs font-bold text-white">
+            {profile.avatar.charAt(0)}
+          </span>
         </div>
+        {!collapsed && (
+          <>
+            <span className="text-sm font-semibold text-foreground flex-1 truncate">
+              {profile.name}
+            </span>
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+            <button className="p-1 hover:bg-secondary rounded">
+              <Search className="h-3.5 w-3.5 text-muted-foreground" />
+            </button>
+          </>
+        )}
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 px-2 py-3 space-y-0.5">
-        {navItems.map((item) => {
+      {/* Main navigation */}
+      <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
+        {mainNav.map((item) => {
           const isActive =
             location.pathname === item.path ||
             (item.path !== "/" && location.pathname.startsWith(item.path));
@@ -56,10 +84,10 @@ export default function AppSidebar() {
               key={item.path}
               to={item.path}
               title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+              className={`flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-sm font-medium transition-colors ${
                 isActive
-                  ? "bg-secondary text-foreground"
-                  : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground"
+                  ? "bg-sidebar-accent text-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
               } ${collapsed ? "justify-center px-2" : ""}`}
             >
               <item.icon className="h-4 w-4 flex-shrink-0" />
@@ -67,40 +95,83 @@ export default function AppSidebar() {
             </Link>
           );
         })}
-      </nav>
 
-      {/* Collapse toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="mx-2 mb-2 flex items-center justify-center rounded-md border border-border py-1.5 text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-      >
-        {collapsed ? (
-          <ChevronRight className="h-4 w-4" />
-        ) : (
-          <ChevronLeft className="h-4 w-4" />
-        )}
-      </button>
-
-      {/* User info */}
-      <div className="border-t border-border px-3 py-3">
-        <Link to="/settings" className="flex items-center gap-3 rounded-md px-2 py-1.5 hover:bg-secondary transition-colors">
-          <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-            <span className="text-xs font-semibold text-primary-foreground">
-              {profile.avatar}
+        {!collapsed && (
+          <div className="pt-1 pb-0.5 px-2.5">
+            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              More
             </span>
           </div>
-          {!collapsed && (
-            <div className="flex flex-col min-w-0">
-              <span className="text-sm font-medium text-foreground truncate">
-                {profile.name}
-              </span>
-              <span className="text-xs text-muted-foreground truncate">
-                {profile.email}
-              </span>
-            </div>
-          )}
+        )}
+
+        {moreNav.map((item) => {
+          const isActive = location.pathname.startsWith(item.path);
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              title={collapsed ? item.label : undefined}
+              className={`flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-sm font-medium transition-colors ${
+                isActive
+                  ? "bg-sidebar-accent text-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+              } ${collapsed ? "justify-center px-2" : ""}`}
+            >
+              <item.icon className="h-4 w-4 flex-shrink-0" />
+              {!collapsed && (
+                <>
+                  <span className="flex-1">{item.label}</span>
+                  {item.hasChevron && (
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                  )}
+                </>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Bottom links */}
+      <div className="border-t border-border px-2 py-2 space-y-0.5">
+        <Link
+          to="/public"
+          className={`flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground transition-colors ${
+            collapsed ? "justify-center px-2" : ""
+          }`}
+        >
+          <ExternalLink className="h-4 w-4 flex-shrink-0" />
+          {!collapsed && <span>View public page</span>}
+        </Link>
+        <button
+          onClick={copyPublicLink}
+          className={`flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground transition-colors w-full ${
+            collapsed ? "justify-center px-2" : ""
+          }`}
+        >
+          <Copy className="h-4 w-4 flex-shrink-0" />
+          {!collapsed && <span>Copy public page link</span>}
+        </button>
+        <Link
+          to="/settings"
+          className={`flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-sm font-medium transition-colors ${
+            location.pathname.startsWith("/settings")
+              ? "bg-sidebar-accent text-foreground"
+              : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+          } ${collapsed ? "justify-center px-2" : ""}`}
+        >
+          <Settings className="h-4 w-4 flex-shrink-0" />
+          {!collapsed && <span>Settings</span>}
         </Link>
       </div>
+
+      {/* Footer */}
+      {!collapsed && (
+        <div className="px-4 py-2 border-t border-border">
+          <p className="text-[10px] text-muted-foreground/50">
+            © 2026 Cal.com, Inc.
+          </p>
+        </div>
+      )}
     </aside>
   );
 }
