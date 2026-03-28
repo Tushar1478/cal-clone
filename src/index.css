@@ -2,47 +2,49 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 @layer base {
   :root {
-    --background: 220 13% 6%;
+    --background: 0 0% 4%;
     --foreground: 0 0% 95%;
-    --card: 220 13% 9%;
+    --card: 0 0% 7%;
     --card-foreground: 0 0% 95%;
-    --popover: 220 13% 10%;
+    --popover: 0 0% 8%;
     --popover-foreground: 0 0% 95%;
     --primary: 0 0% 100%;
-    --primary-foreground: 220 13% 6%;
-    --secondary: 220 10% 14%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 10%;
     --secondary-foreground: 0 0% 90%;
-    --muted: 220 10% 16%;
-    --muted-foreground: 220 5% 55%;
-    --accent: 220 10% 14%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 10%;
     --accent-foreground: 0 0% 90%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --border: 220 10% 16%;
-    --input: 220 10% 16%;
-    --ring: 220 10% 30%;
+    --border: 0 0% 14%;
+    --input: 0 0% 12%;
+    --ring: 0 0% 25%;
     --radius: 0.5rem;
     --cal-brand: 0 0% 100%;
-    --cal-brand-foreground: 220 13% 6%;
-    --cal-subtle: 220 13% 7%;
-    --cal-muted: 220 5% 45%;
+    --cal-brand-foreground: 0 0% 4%;
+    --cal-subtle: 0 0% 5%;
+    --cal-muted: 0 0% 40%;
     --cal-emphasis: 0 0% 95%;
     --cal-success: 142 71% 45%;
     --cal-info: 217 91% 60%;
     --cal-warning: 38 92% 50%;
     --cal-error: 0 72% 51%;
-    --sidebar-background: 220 13% 8%;
-    --sidebar-foreground: 220 5% 70%;
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 65%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 220 13% 6%;
-    --sidebar-accent: 220 10% 14%;
+    --sidebar-primary-foreground: 0 0% 4%;
+    --sidebar-accent: 0 0% 11%;
     --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 220 10% 14%;
-    --sidebar-ring: 220 10% 30%;
+    --sidebar-border: 0 0% 11%;
+    --sidebar-ring: 0 0% 25%;
   }
 }
+
 @layer base {
   * {
     @apply border-border;
@@ -51,7 +53,6 @@
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
-  /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -67,6 +68,7 @@
     background: hsl(var(--muted-foreground));
   }
 }
+
 @layer utilities {
   .cal-card {
     @apply bg-card rounded-lg border border-border;
@@ -107,4 +109,4 @@
   .cal-input {
     @apply bg-secondary border-border text-foreground placeholder:text-muted-foreground;
   }
-} 
+}
