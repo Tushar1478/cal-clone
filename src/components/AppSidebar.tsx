@@ -10,35 +10,36 @@ import {
   ChevronRight,
   ExternalLink,
   Copy,
-  Gift,
   Search,
   ChevronDown,
   Grid3X3,
   Zap,
   Route,
   Users,
+  LogOut,
 } from "lucide-react";
 import { useState } from "react";
 import { getProfile } from "@/lib/store";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const mainNav = [
-  { path: "/event-types", label: "Event types", icon: LinkIcon },
+  { path: "/event-types", label: "Event Types", icon: LinkIcon },
   { path: "/bookings", label: "Bookings", icon: CalendarDays },
   { path: "/availability", label: "Availability", icon: Clock },
+  { path: "/teams", label: "Teams", icon: Users },
 ];
 
 const moreNav = [
-  { path: "/analytics", label: "Insights", icon: BarChart3, hasChevron: true },
-];
-
-const bottomNav = [
-  { path: "/public", label: "View public page", icon: ExternalLink },
-  { path: "/settings", label: "Settings", icon: Settings },
+  { path: "/apps", label: "Apps", icon: Grid3X3 },
+  { path: "/routing", label: "Routing Forms", icon: Route },
+  { path: "/workflows", label: "Workflows", icon: Zap },
+  { path: "/analytics", label: "Insights", icon: BarChart3 },
 ];
 
 export default function AppSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   const profile = getProfile();
 
@@ -46,6 +47,31 @@ export default function AppSidebar() {
     navigator.clipboard.writeText(`${window.location.origin}/${profile.username}`);
     toast.success("Link copied to clipboard");
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem("cal-clone-auth");
+    toast.success("Signed out");
+    navigate("/login");
+  };
+
+  const isActive = (path: string) =>
+    location.pathname === path || (path !== "/" && location.pathname.startsWith(path));
+
+  const navLink = (item: { path: string; label: string; icon: any }) => (
+    <Link
+      key={item.path}
+      to={item.path}
+      title={collapsed ? item.label : undefined}
+      className={`flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-sm font-medium transition-colors ${
+        isActive(item.path)
+          ? "bg-sidebar-accent text-foreground"
+          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+      } ${collapsed ? "justify-center px-2" : ""}`}
+    >
+      <item.icon className="h-4 w-4 flex-shrink-0" />
+      {!collapsed && <span>{item.label}</span>}
+    </Link>
+  );
 
   return (
     <aside
@@ -75,60 +101,18 @@ export default function AppSidebar() {
 
       {/* Main navigation */}
       <nav className="flex-1 px-2 py-2 space-y-0.5 overflow-y-auto">
-        {mainNav.map((item) => {
-          const isActive =
-            location.pathname === item.path ||
-            (item.path !== "/" && location.pathname.startsWith(item.path));
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-sm font-medium transition-colors ${
-                isActive
-                  ? "bg-sidebar-accent text-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
-              } ${collapsed ? "justify-center px-2" : ""}`}
-            >
-              <item.icon className="h-4 w-4 flex-shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
-            </Link>
-          );
-        })}
+        {mainNav.map(navLink)}
 
         {!collapsed && (
-          <div className="pt-1 pb-0.5 px-2.5">
+          <div className="pt-3 pb-0.5 px-2.5">
             <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
               More
             </span>
           </div>
         )}
+        {collapsed && <div className="pt-2" />}
 
-        {moreNav.map((item) => {
-          const isActive = location.pathname.startsWith(item.path);
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-sm font-medium transition-colors ${
-                isActive
-                  ? "bg-sidebar-accent text-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
-              } ${collapsed ? "justify-center px-2" : ""}`}
-            >
-              <item.icon className="h-4 w-4 flex-shrink-0" />
-              {!collapsed && (
-                <>
-                  <span className="flex-1">{item.label}</span>
-                  {item.hasChevron && (
-                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                  )}
-                </>
-              )}
-            </Link>
-          );
-        })}
+        {moreNav.map(navLink)}
       </nav>
 
       {/* Bottom links */}
@@ -149,12 +133,12 @@ export default function AppSidebar() {
           }`}
         >
           <Copy className="h-4 w-4 flex-shrink-0" />
-          {!collapsed && <span>Copy public page link</span>}
+          {!collapsed && <span>Copy public link</span>}
         </button>
         <Link
           to="/settings"
           className={`flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-sm font-medium transition-colors ${
-            location.pathname.startsWith("/settings")
+            isActive("/settings")
               ? "bg-sidebar-accent text-foreground"
               : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
           } ${collapsed ? "justify-center px-2" : ""}`}
@@ -162,7 +146,28 @@ export default function AppSidebar() {
           <Settings className="h-4 w-4 flex-shrink-0" />
           {!collapsed && <span>Settings</span>}
         </Link>
+        <button
+          onClick={handleLogout}
+          className={`flex items-center gap-2.5 rounded-md px-2.5 py-[7px] text-sm font-medium text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-destructive transition-colors w-full ${
+            collapsed ? "justify-center px-2" : ""
+          }`}
+        >
+          <LogOut className="h-4 w-4 flex-shrink-0" />
+          {!collapsed && <span>Sign out</span>}
+        </button>
       </div>
+
+      {/* Collapse toggle */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-sidebar border border-border flex items-center justify-center hover:bg-secondary transition-colors z-50"
+      >
+        {collapsed ? (
+          <ChevronRight className="h-3 w-3 text-muted-foreground" />
+        ) : (
+          <ChevronLeft className="h-3 w-3 text-muted-foreground" />
+        )}
+      </button>
 
       {/* Footer */}
       {!collapsed && (
