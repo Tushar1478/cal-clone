@@ -2,126 +2,55 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 @layer base {
   :root {
-    /* Core backgrounds — matched to oklab(0.204625...) ≈ rgb(26,26,26) */
-    --background: 0 0% 10%;
+    --background: 220 8% 8%;
     --foreground: 0 0% 95%;
-
-    /* Cards slightly lighter than background */
-    --card: 0 0% 12%;
+    --card: 220 8% 11%;
     --card-foreground: 0 0% 95%;
-
-    /* Popover */
-    --popover: 0 0% 13%;
+    --popover: 220 8% 12%;
     --popover-foreground: 0 0% 95%;
-
-    /* Primary */
     --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 10%;
-
-    /* Secondary — matches rgb(38,38,38) border tone */
-    --secondary: 0 0% 15%;
+    --primary-foreground: 220 8% 8%;
+    --secondary: 220 6% 16%;
     --secondary-foreground: 0 0% 90%;
-
-    /* Muted */
-    --muted: 0 0% 17%;
-    --muted-foreground: 0 0% 55%;
-
-    /* Accent */
-    --accent: 0 0% 15%;
+    --muted: 220 6% 18%;
+    --muted-foreground: 220 4% 50%;
+    --accent: 220 6% 16%;
     --accent-foreground: 0 0% 90%;
-
-    /* Destructive */
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-
-    /* Border — matched exactly to rgb(38,38,38) */
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 0 0% 30%;
-
-    /* Border radius */
+    --border: 220 6% 18%;
+    --input: 220 6% 18%;
+    --ring: 220 6% 28%;
     --radius: 0.5rem;
-
-    /* Cal.com custom tokens */
     --cal-brand: 0 0% 100%;
-    --cal-brand-foreground: 0 0% 10%;
-    --cal-subtle: 0 0% 11%;
-    --cal-muted: 0 0% 45%;
+    --cal-brand-foreground: 220 8% 8%;
+    --cal-subtle: 220 8% 9%;
+    --cal-muted: 220 4% 42%;
     --cal-emphasis: 0 0% 95%;
     --cal-success: 142 71% 45%;
     --cal-info: 217 91% 60%;
     --cal-warning: 38 92% 50%;
     --cal-error: 0 72% 51%;
-
-    /* Sidebar — matched to navbar/header computed styles */
-    --sidebar-background: 0 0% 11%;
-    --sidebar-foreground: 0 0% 70%;
+    --sidebar-background: 220 8% 9%;
+    --sidebar-foreground: 220 4% 65%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 0 0% 10%;
-    --sidebar-accent: 0 0% 15%;
+    --sidebar-primary-foreground: 220 8% 8%;
+    --sidebar-accent: 220 6% 16%;
     --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 0 0% 30%;
-
-    /* Navbar / header — from screenshot 1 computed values */
-    --navbar-height: 64.6667px;       /* height from dev tools */
-    --navbar-padding: 16px;           /* padding-block/inline = 16px */
-    --navbar-z-index: 40;             /* z-index: 40 */
-    --navbar-backdrop-blur: 16px;     /* backdrop-filter: blur(16px) */
-    --navbar-border: rgb(38, 38, 38); /* border-bottom-color from screenshot 2 */
+    --sidebar-border: 220 6% 16%;
+    --sidebar-ring: 220 6% 28%;
   }
 }
-
 @layer base {
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', 'Inter Fallback', -apple-system, BlinkMacSystemFont, sans-serif;
-    /* From dev tools: text-rendering + font-smoothing */
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
-    line-height: 24px;
-    tab-size: 4;
-    unicode-bidi: isolate;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
-
-  /* Sticky navbar — matches ALL computed properties from screenshots */
-  header,
-  nav,
-  [data-navbar],
-  .navbar {
-    position: sticky;
-    top: 0px;
-    z-index: var(--navbar-z-index);
-    height: var(--navbar-height);
-    width: 100%;
-
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    padding-top: var(--navbar-padding);
-    padding-bottom: var(--navbar-padding);
-    padding-left: var(--navbar-padding);
-    padding-right: var(--navbar-padding);
-
-    background-color: rgb(26, 26, 26); /* oklab(0.204625...) ≈ #1a1a1a */
-    backdrop-filter: blur(var(--navbar-backdrop-blur));
-    -webkit-backdrop-filter: blur(var(--navbar-backdrop-blur));
-
-    border-bottom: 0.666667px solid var(--navbar-border);
-
-    box-sizing: border-box;
-    color-scheme: dark;
-    font-family: 'Inter', 'Inter Fallback', sans-serif;
-  }
-
   /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
@@ -138,7 +67,6 @@
     background: hsl(var(--muted-foreground));
   }
 }
-
 @layer utilities {
   .cal-card {
     @apply bg-card rounded-lg border border-border;
