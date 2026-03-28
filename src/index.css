@@ -1,59 +1,77 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 220 13% 6%;
+    /* Core backgrounds — matched to oklab(0.204625...) ≈ rgb(26,26,26) */
+    --background: 0 0% 10%;
     --foreground: 0 0% 95%;
 
-    --card: 220 13% 9%;
+    /* Cards slightly lighter than background */
+    --card: 0 0% 12%;
     --card-foreground: 0 0% 95%;
 
-    --popover: 220 13% 10%;
+    /* Popover */
+    --popover: 0 0% 13%;
     --popover-foreground: 0 0% 95%;
 
+    /* Primary */
     --primary: 0 0% 100%;
-    --primary-foreground: 220 13% 6%;
+    --primary-foreground: 0 0% 10%;
 
-    --secondary: 220 10% 14%;
+    /* Secondary — matches rgb(38,38,38) border tone */
+    --secondary: 0 0% 15%;
     --secondary-foreground: 0 0% 90%;
 
-    --muted: 220 10% 16%;
-    --muted-foreground: 220 5% 55%;
+    /* Muted */
+    --muted: 0 0% 17%;
+    --muted-foreground: 0 0% 55%;
 
-    --accent: 220 10% 14%;
+    /* Accent */
+    --accent: 0 0% 15%;
     --accent-foreground: 0 0% 90%;
 
+    /* Destructive */
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 220 10% 16%;
-    --input: 220 10% 16%;
-    --ring: 220 10% 30%;
+    /* Border — matched exactly to rgb(38,38,38) */
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 30%;
 
+    /* Border radius */
     --radius: 0.5rem;
 
+    /* Cal.com custom tokens */
     --cal-brand: 0 0% 100%;
-    --cal-brand-foreground: 220 13% 6%;
-    --cal-subtle: 220 13% 7%;
-    --cal-muted: 220 5% 45%;
+    --cal-brand-foreground: 0 0% 10%;
+    --cal-subtle: 0 0% 11%;
+    --cal-muted: 0 0% 45%;
     --cal-emphasis: 0 0% 95%;
     --cal-success: 142 71% 45%;
     --cal-info: 217 91% 60%;
     --cal-warning: 38 92% 50%;
     --cal-error: 0 72% 51%;
 
-    --sidebar-background: 220 13% 8%;
-    --sidebar-foreground: 220 5% 70%;
+    /* Sidebar — matched to navbar/header computed styles */
+    --sidebar-background: 0 0% 11%;
+    --sidebar-foreground: 0 0% 70%;
     --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 220 13% 6%;
-    --sidebar-accent: 220 10% 14%;
+    --sidebar-primary-foreground: 0 0% 10%;
+    --sidebar-accent: 0 0% 15%;
     --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 220 10% 14%;
-    --sidebar-ring: 220 10% 30%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 0 0% 30%;
+
+    /* Navbar / header — from screenshot 1 computed values */
+    --navbar-height: 64.6667px;       /* height from dev tools */
+    --navbar-padding: 16px;           /* padding-block/inline = 16px */
+    --navbar-z-index: 40;             /* z-index: 40 */
+    --navbar-backdrop-blur: 16px;     /* backdrop-filter: blur(16px) */
+    --navbar-border: rgb(38, 38, 38); /* border-bottom-color from screenshot 2 */
   }
 }
 
@@ -64,7 +82,44 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Inter', 'Inter Fallback', -apple-system, BlinkMacSystemFont, sans-serif;
+    /* From dev tools: text-rendering + font-smoothing */
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    line-height: 24px;
+    tab-size: 4;
+    unicode-bidi: isolate;
+  }
+
+  /* Sticky navbar — matches ALL computed properties from screenshots */
+  header,
+  nav,
+  [data-navbar],
+  .navbar {
+    position: sticky;
+    top: 0px;
+    z-index: var(--navbar-z-index);
+    height: var(--navbar-height);
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding-top: var(--navbar-padding);
+    padding-bottom: var(--navbar-padding);
+    padding-left: var(--navbar-padding);
+    padding-right: var(--navbar-padding);
+
+    background-color: rgb(26, 26, 26); /* oklab(0.204625...) ≈ #1a1a1a */
+    backdrop-filter: blur(var(--navbar-backdrop-blur));
+    -webkit-backdrop-filter: blur(var(--navbar-backdrop-blur));
+
+    border-bottom: 0.666667px solid var(--navbar-border);
+
+    box-sizing: border-box;
+    color-scheme: dark;
+    font-family: 'Inter', 'Inter Fallback', sans-serif;
   }
 
   /* Custom scrollbar */
@@ -88,48 +143,39 @@
   .cal-card {
     @apply bg-card rounded-lg border border-border;
   }
-
   .cal-header {
     @apply text-lg font-semibold text-foreground;
   }
-
   .cal-subtext {
     @apply text-sm text-muted-foreground;
   }
-
   .cal-link {
     @apply text-sm font-medium hover:underline cursor-pointer;
     color: hsl(var(--cal-info));
   }
-
   .cal-badge {
     @apply inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium;
   }
-
   .cal-badge-success {
     @apply cal-badge;
     background: hsl(var(--cal-success) / 0.15);
     color: hsl(var(--cal-success));
   }
-
   .cal-badge-warning {
     @apply cal-badge;
     background: hsl(var(--cal-warning) / 0.15);
     color: hsl(var(--cal-warning));
   }
-
   .cal-badge-info {
     @apply cal-badge;
     background: hsl(var(--cal-info) / 0.15);
     color: hsl(var(--cal-info));
   }
-
   .cal-badge-error {
     @apply cal-badge;
     background: hsl(var(--cal-error) / 0.15);
     color: hsl(var(--cal-error));
   }
-
   .cal-input {
     @apply bg-secondary border-border text-foreground placeholder:text-muted-foreground;
   }
