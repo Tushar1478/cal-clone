@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
 
@@ -32,70 +31,87 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
-
-      {/* Grid background */}
+    <div
+      className="min-h-screen flex items-center justify-center relative overflow-hidden"
+      style={{ backgroundColor: "hsl(0 0% 5%)" }}
+    >
+      {/* ── GRID BACKGROUND — rounded squares ── */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: `
-            linear-gradient(hsl(var(--border)) 1px, transparent 1px),
-            linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px)
+            radial-gradient(
+              ellipse 70% 70% at 50% 50%,
+              transparent 0%,
+              hsl(0 0% 5%) 100%
+            )
           `,
-          backgroundSize: "80px 80px",
-          maskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)",
-          WebkitMaskImage: "radial-gradient(ellipse 80% 80% at 50% 50%, black 40%, transparent 100%)",
-          opacity: 0.4,
+          zIndex: 2,
         }}
       />
-
-      {/* Rounded squares grid overlay — like Cal.com */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {Array.from({ length: 80 }).map((_, i) => {
-          const col = i % 10;
-          const row = Math.floor(i / 10);
+      <div
+        className="absolute inset-0 pointer-events-none overflow-hidden"
+        style={{ zIndex: 1 }}
+      >
+        {Array.from({ length: 120 }).map((_, i) => {
+          const cols = 12;
+          const col = i % cols;
+          const row = Math.floor(i / cols);
           return (
             <div
               key={i}
-              className="absolute rounded-xl border border-border/30"
               style={{
-                width: 72,
-                height: 72,
-                left: col * 90 + (row % 2 === 0 ? 0 : 45),
-                top: row * 90,
-                opacity: 0.35,
+                position: "absolute",
+                width: 90,
+                height: 90,
+                left: col * 110 - 60,
+                top: row * 110 - 20,
+                borderRadius: 16,
+                border: "1px solid hsl(0 0% 18%)",
+                backgroundColor: "hsl(0 0% 10%)",
               }}
             />
           );
         })}
       </div>
 
-      {/* Card */}
-      <div className="relative z-10 w-full max-w-[420px] mx-4">
+      {/* ── CARD + FOOTER WRAPPER ── */}
+      <div className="relative z-10 w-full max-w-[460px] mx-4 flex flex-col items-center">
+
+        {/* Card */}
         <div
-          className="rounded-2xl border border-border overflow-hidden"
-          style={{ background: "hsl(var(--card))" }}
+          className="w-full rounded-2xl overflow-hidden"
+          style={{
+            backgroundColor: "hsl(0 0% 11%)",
+            border: "1px solid hsl(0 0% 18%)",
+          }}
         >
-          {/* Top section */}
-          <div className="px-8 pt-8 pb-6">
-            {/* Logo */}
-            <div className="flex flex-col items-center mb-6">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="h-7 w-7 rounded-md bg-foreground flex items-center justify-center">
-                  <span className="text-background font-black text-xs tracking-tighter">C</span>
-                </div>
-                <span className="text-base font-bold text-foreground tracking-tight">Cal.com</span>
-              </div>
-              <h2 className="text-base font-semibold text-foreground">Welcome back!</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">Sign in to continue</p>
+          <div className="px-10 pt-10 pb-8">
+
+            {/* Logo + headline */}
+            <div className="text-center mb-7">
+              <h1 className="text-xl font-bold text-white mb-2 tracking-tight">
+                Cal.com
+              </h1>
+              <p className="text-sm" style={{ color: "hsl(0 0% 55%)" }}>
+                Welcome back! Sign in to continue
+              </p>
             </div>
 
-            {/* Google button */}
+            {/* Google button — white pill */}
             <button
+              type="button"
               onClick={() => handleSocialLogin("Google")}
-              className="w-full flex items-center justify-center gap-3 h-11 rounded-lg border border-border bg-secondary/60 text-sm font-medium text-foreground hover:bg-secondary transition-colors mb-5"
+              className="w-full flex items-center justify-center gap-3 font-semibold text-sm transition-opacity hover:opacity-90"
+              style={{
+                height: 48,
+                borderRadius: 999,
+                backgroundColor: "hsl(0 0% 96%)",
+                color: "#111",
+                border: "none",
+              }}
             >
-              <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
+              <svg width="18" height="18" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" />
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -104,62 +120,128 @@ export default function LoginPage() {
               Sign in with Google
             </button>
 
-            {/* Divider */}
-            <div className="relative flex items-center gap-3 mb-5">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted-foreground">or</span>
-              <div className="flex-1 h-px bg-border" />
+            {/* OR divider */}
+            <div className="relative flex items-center my-6">
+              <div className="flex-1 h-px" style={{ backgroundColor: "hsl(0 0% 20%)" }} />
+              <span className="mx-4 text-sm" style={{ color: "hsl(0 0% 45%)" }}>or</span>
+              <div className="flex-1 h-px" style={{ backgroundColor: "hsl(0 0% 20%)" }} />
             </div>
 
             {/* Form */}
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-5">
+
+              {/* Email */}
               <div>
-                <Label className="text-sm font-medium text-foreground">Email</Label>
-                <Input
+                <label
+                  className="block text-sm font-medium mb-2"
+                  style={{ color: "hsl(0 0% 85%)" }}
+                >
+                  Email
+                </label>
+                <input
                   type="email"
-                  placeholder=""
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1.5 h-10 bg-secondary/50 border-border focus:ring-1 focus:ring-ring"
+                  className="w-full text-sm outline-none transition-colors"
+                  style={{
+                    height: 44,
+                    borderRadius: 999,
+                    backgroundColor: "hsl(0 0% 16%)",
+                    border: "1px solid hsl(0 0% 22%)",
+                    color: "hsl(0 0% 92%)",
+                    padding: "0 18px",
+                  }}
+                  onFocus={(e) => {
+                    e.target.style.border = "1px solid hsl(0 0% 45%)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.border = "1px solid hsl(0 0% 22%)";
+                  }}
                 />
               </div>
 
+              {/* Password */}
               <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <Label className="text-sm font-medium text-foreground">Password</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <label
+                    className="text-sm font-medium"
+                    style={{ color: "hsl(0 0% 85%)" }}
+                  >
+                    Password
+                  </label>
                   <Link
                     to="/forgot-password"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm transition-colors"
+                    style={{ color: "hsl(0 0% 50%)" }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "hsl(0 0% 75%)")}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = "hsl(0 0% 50%)")}
                   >
                     Forgot?
                   </Link>
                 </div>
                 <div className="relative">
-                  <Input
+                  <input
                     type={showPassword ? "text" : "password"}
-                    placeholder=""
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-10 pr-10 bg-secondary/50 border-border focus:ring-1 focus:ring-ring"
+                    className="w-full text-sm outline-none transition-colors"
+                    style={{
+                      height: 44,
+                      borderRadius: 999,
+                      backgroundColor: "hsl(0 0% 16%)",
+                      border: "1px solid hsl(0 0% 22%)",
+                      color: "hsl(0 0% 92%)",
+                      padding: "0 48px 0 18px",
+                    }}
+                    onFocus={(e) => {
+                      e.target.style.border = "1px solid hsl(0 0% 45%)";
+                    }}
+                    onBlur={(e) => {
+                      e.target.style.border = "1px solid hsl(0 0% 22%)";
+                    }}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 transition-colors"
+                    style={{ color: "hsl(0 0% 45%)" }}
+                    onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "hsl(0 0% 75%)")}
+                    onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "hsl(0 0% 45%)")}
                   >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                   </button>
                 </div>
               </div>
 
+              {/* Continue button — dark pill */}
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-11 rounded-lg bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors disabled:opacity-60 flex items-center justify-center gap-2 mt-2"
+                className="w-full flex items-center justify-center gap-2 text-sm font-bold transition-opacity disabled:opacity-60"
+                style={{
+                  height: 48,
+                  borderRadius: 999,
+                  backgroundColor: "hsl(0 0% 22%)",
+                  color: "hsl(0 0% 92%)",
+                  border: "none",
+                  marginTop: 8,
+                }}
+                onMouseEnter={(e) => {
+                  if (!loading) (e.currentTarget as HTMLElement).style.backgroundColor = "hsl(0 0% 28%)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLElement).style.backgroundColor = "hsl(0 0% 22%)";
+                }}
               >
                 {loading ? (
                   <>
-                    <span className="h-4 w-4 rounded-full border-2 border-background/30 border-t-background animate-spin" />
+                    <span
+                      className="h-4 w-4 rounded-full border-2 animate-spin"
+                      style={{
+                        borderColor: "hsl(0 0% 40%)",
+                        borderTopColor: "hsl(0 0% 92%)",
+                      }}
+                    />
                     Signing in…
                   </>
                 ) : (
@@ -169,35 +251,32 @@ export default function LoginPage() {
             </form>
           </div>
 
-          {/* Bottom footer strip */}
-          <div className="border-t border-border px-8 py-4 flex items-center justify-center gap-1 bg-secondary/30">
+          {/* Bottom strip — inside card, separated by border */}
+          <div
+            className="flex items-center justify-center gap-2 py-4"
+            style={{ borderTop: "1px solid hsl(0 0% 16%)" }}
+          >
             <Link
               to="/signup"
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm transition-colors"
+              style={{ color: "hsl(0 0% 60%)" }}
+              onMouseEnter={(e) => (e.currentTarget.style.color = "hsl(0 0% 85%)")}
+              onMouseLeave={(e) => (e.currentTarget.style.color = "hsl(0 0% 60%)")}
             >
               Create account
             </Link>
-            <span className="text-muted-foreground/40 text-sm mx-1">·</span>
+            <span style={{ color: "hsl(0 0% 30%)", fontSize: 16 }}>·</span>
             <button
               onClick={() => handleSocialLogin("SAML/OIDC")}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm transition-colors"
+              style={{ color: "hsl(0 0% 60%)" }}
+              onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = "hsl(0 0% 85%)")}
+              onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = "hsl(0 0% 60%)")}
             >
               Sign in with SAML/OIDC
             </button>
           </div>
         </div>
-
-        {/* Terms */}
-        <p className="text-center text-[11px] text-muted-foreground/50 mt-5">
-          By signing in, you agree to our{" "}
-          <span className="underline cursor-pointer hover:text-muted-foreground/80 transition-colors">
-            Terms of Service
-          </span>{" "}
-          and{" "}
-          <span className="underline cursor-pointer hover:text-muted-foreground/80 transition-colors">
-            Privacy Policy
-          </span>
-        </p>
       </div>
     </div>
   );
