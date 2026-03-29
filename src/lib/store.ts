@@ -315,7 +315,8 @@ export function duplicateEventType(id: string): EventType | null {
 // ─── Availability Schedules ────────────────────────────────
 
 export function getAvailabilitySchedules(): AvailabilitySchedule[] {
-  return loadFromStorage<AvailabilitySchedule[]>(STORAGE_KEYS.availability) || getDefaultAvailability();
+  const data = loadFromStorage<AvailabilitySchedule[]>(STORAGE_KEYS.availability);
+  return Array.isArray(data) ? data : getDefaultAvailability();
 }
 
 export function getAvailability(): AvailabilitySchedule {
