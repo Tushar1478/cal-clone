@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Plus,
@@ -8,15 +8,22 @@ import {
   Pencil,
   Trash2,
   Clock,
-  Share2,
   EyeOff,
+  Eye,
   Files,
-  Shield,
-  Search,
   Link as LinkIcon,
+  Code2,
+  ChevronDown,
+  Globe,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
-import { EventType, EVENT_COLORS, DURATION_OPTIONS, BUFFER_OPTIONS, CustomQuestion } from "@/lib/types";
+import {
+  EventType,
+  EVENT_COLORS,
+  DURATION_OPTIONS,
+  BUFFER_OPTIONS,
+  CustomQuestion,
+} from "@/lib/types";
 import {
   getEventTypes,
   saveEventType,
@@ -32,6 +39,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
   DropdownMenu,
@@ -63,15 +71,34 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 
+// ─── helpers ──────────────────────────────────────────────
+
+function toSlug(str: string) {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function sanitiseSlug(str: string) {
+  return str
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+// ─── Page ─────────────────────────────────────────────────
+
 export default function EventTypesPage() {
   const [eventTypes, setEventTypes] = useState<EventType[]>([]);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editing, setEditing] = useState<EventType | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const profile = getProfile();
-  const [form, setForm] = useState({
+
+  const blankForm = () => ({
     title: "",
     slug: "",
     description: "",
@@ -84,29 +111,51 @@ export default function EventTypesPage() {
     customQuestions: [] as CustomQuestion[],
   });
 
+  const [form, setForm] = useState(blankForm());
+
   useEffect(() => {
     setEventTypes(getEventTypes());
   }, []);
 
   const refresh = () => setEventTypes(getEventTypes());
 
+  // ── Create flow ──────────────────────────────────────────
   const openCreate = () => {
-    setEditing(null);
-    setForm({
-      title: "",
-      slug: "",
-      description: "",
-      duration: 30,
-      color: EVENT_COLORS[0],
-      bufferBefore: 0,
-      bufferAfter: 0,
-      minNotice: 1,
-      maxFutureDays: 60,
-      customQuestions: [],
-    });
-    setDialogOpen(true);
+    setForm(blankForm());
+    setCreateOpen(true);
   };
 
+  const handleCreate = () => {
+    if (!form.title.trim() || !form.slug.trim()) {
+      toast.error("Title and URL slug are required");
+      return;
+    }
+    const slug = sanitiseSlug(form.slug);
+    if (getEventTypes().find((e) => e.slug === slug)) {
+      toast.error("This URL slug is already in use");
+      return;
+    }
+    const et: EventType = {
+      id: crypto.randomUUID(),
+      title: form.title.trim(),
+      slug,
+      description: form.description,
+      duration: form.duration,
+      color: form.color,
+      isActive: true,
+      bufferBefore: form.bufferBefore,
+      bufferAfter: form.bufferAfter,
+      customQuestions: [],
+      minNotice: form.minNotice,
+      maxFutureDays: form.maxFutureDays,
+    };
+    saveEventType(et);
+    refresh();
+    setCreateOpen(false);
+    toast.success(`${et.title} event type created successfully`);
+  };
+
+  // ── Edit flow ────────────────────────────────────────────
   const openEdit = (et: EventType) => {
     setEditing(et);
     setForm({
@@ -121,35 +170,27 @@ export default function EventTypesPage() {
       maxFutureDays: et.maxFutureDays,
       customQuestions: et.customQuestions || [],
     });
-    setDialogOpen(true);
+    setEditOpen(true);
   };
 
   const handleSave = () => {
+    if (!editing) return;
     if (!form.title.trim() || !form.slug.trim()) {
       toast.error("Title and URL slug are required");
       return;
     }
-    const slug = form.slug
-      .toLowerCase()
-      .replace(/[^a-z0-9-]/g, "-")
-      .replace(/^-+|-+$/g, "");
-
-    const existing = getEventTypes().find(
-      (e) => e.slug === slug && e.id !== editing?.id
-    );
-    if (existing) {
+    const slug = sanitiseSlug(form.slug);
+    if (getEventTypes().find((e) => e.slug === slug && e.id !== editing.id)) {
       toast.error("This URL slug is already in use");
       return;
     }
-
     const et: EventType = {
-      id: editing?.id || crypto.randomUUID(),
-      title: form.title,
+      ...editing,
+      title: form.title.trim(),
       slug,
       description: form.description,
       duration: form.duration,
       color: form.color,
-      isActive: editing?.isActive ?? true,
       bufferBefore: form.bufferBefore,
       bufferAfter: form.bufferAfter,
       customQuestions: form.customQuestions,
@@ -158,10 +199,11 @@ export default function EventTypesPage() {
     };
     saveEventType(et);
     refresh();
-    setDialogOpen(false);
-    toast.success(editing ? "Event type updated" : "Event type created");
+    setEditOpen(false);
+    toast.success(`${et.title} event type updated successfully`);
   };
 
+  // ── Delete ───────────────────────────────────────────────
   const confirmDelete = (id: string) => {
     setDeletingId(id);
     setDeleteDialogOpen(true);
@@ -171,12 +213,13 @@ export default function EventTypesPage() {
     if (deletingId) {
       deleteEventType(deletingId);
       refresh();
-      toast.success("Event type deleted");
+      toast.success("Event type deleted successfully");
     }
     setDeleteDialogOpen(false);
     setDeletingId(null);
   };
 
+  // ── Toggle / Duplicate / Copy ────────────────────────────
   const handleToggle = (et: EventType) => {
     saveEventType({ ...et, isActive: !et.isActive });
     refresh();
@@ -193,265 +236,442 @@ export default function EventTypesPage() {
     toast.success("Link copied to clipboard");
   };
 
-  const addQuestion = () => {
-    setForm({
-      ...form,
+  // ── Questions helpers ────────────────────────────────────
+  const addQuestion = () =>
+    setForm((f) => ({
+      ...f,
       customQuestions: [
-        ...form.customQuestions,
+        ...f.customQuestions,
         { id: crypto.randomUUID(), label: "", type: "text", required: false },
       ],
+    }));
+
+  const updateQuestion = (idx: number, updates: Partial<CustomQuestion>) =>
+    setForm((f) => {
+      const q = [...f.customQuestions];
+      q[idx] = { ...q[idx], ...updates };
+      return { ...f, customQuestions: q };
     });
-  };
 
-  const updateQuestion = (idx: number, updates: Partial<CustomQuestion>) => {
-    const questions = [...form.customQuestions];
-    questions[idx] = { ...questions[idx], ...updates };
-    setForm({ ...form, customQuestions: questions });
-  };
-
-  const removeQuestion = (idx: number) => {
-    setForm({
-      ...form,
-      customQuestions: form.customQuestions.filter((_, i) => i !== idx),
-    });
-  };
-
-  const filtered = eventTypes.filter((et) => {
-    if (!searchQuery) return true;
-    return et.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           et.slug.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
-  const activeTypes = filtered.filter((e) => e.isActive);
-  const inactiveTypes = filtered.filter((e) => !e.isActive);
+  const removeQuestion = (idx: number) =>
+    setForm((f) => ({
+      ...f,
+      customQuestions: f.customQuestions.filter((_, i) => i !== idx),
+    }));
 
   return (
     <DashboardLayout>
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6">
+      {/* ── Page Header ─────────────────────────────────── */}
+      <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Event types</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-xl font-semibold text-foreground">Event Types</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Configure different events for people to book on your calendar.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative hidden sm:block">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 w-44 h-9 text-sm bg-secondary border-border"
-            />
+        <Button
+          onClick={openCreate}
+          size="sm"
+          className="h-9 gap-1.5 text-sm font-medium"
+        >
+          <Plus className="h-4 w-4" />
+          New event type
+        </Button>
+      </div>
+
+      {/* ── Profile group header ─────────────────────────── */}
+      <div className="rounded-md border border-border bg-card overflow-hidden">
+        {/* Group header row */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
+          <div className="flex items-center gap-2.5">
+            {/* Avatar */}
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center text-white text-xs font-semibold shrink-0 select-none">
+              {profile.username?.slice(0, 2).toUpperCase() || "ME"}
+            </div>
+            <div>
+              <span className="text-sm font-medium text-foreground">
+                {profile.username}
+              </span>
+              <span className="ml-1.5 text-xs text-muted-foreground">
+                {eventTypes.length}{" "}
+                {eventTypes.length === 1 ? "event type" : "event types"}
+              </span>
+            </div>
           </div>
-          <Button onClick={openCreate} size="sm" className="gap-1.5 h-9">
-            <Plus className="h-4 w-4" />
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={openCreate}
+          >
+            <Plus className="h-3.5 w-3.5" />
             New
           </Button>
         </div>
-      </div>
 
-      {/* Event Types List */}
-      <div className="cal-card overflow-hidden divide-y divide-border">
-        {filtered.length === 0 && eventTypes.length === 0 && (
-          <div className="px-6 py-16 text-center">
-            <div className="mx-auto w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-3">
-              <LinkIcon className="h-5 w-5 text-muted-foreground" />
+        {/* ── Empty state ──────────────────────────────── */}
+        {eventTypes.length === 0 && (
+          <div className="px-6 py-16 text-center flex flex-col items-center">
+            <div className="mx-auto mb-4 h-14 w-14 rounded-full border-2 border-dashed border-border flex items-center justify-center">
+              <LinkIcon className="h-6 w-6 text-muted-foreground" />
             </div>
-            <p className="text-sm font-medium text-foreground mb-1">
-              No event types yet
+            <h3 className="text-sm font-semibold text-foreground mb-1">
+              Create your first event type
+            </h3>
+            <p className="text-sm text-muted-foreground max-w-xs mb-5">
+              Event types enable you to share links that show available times on
+              your calendar and allow people to make bookings with you.
             </p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Create your first event type to start accepting bookings.
-            </p>
-            <Button onClick={openCreate} variant="outline" size="sm" className="gap-1.5">
+            <Button
+              onClick={openCreate}
+              size="sm"
+              className="gap-1.5"
+            >
               <Plus className="h-4 w-4" />
               New event type
             </Button>
           </div>
         )}
-        {filtered.length === 0 && eventTypes.length > 0 && (
-          <div className="px-6 py-12 text-center">
-            <p className="text-sm text-muted-foreground">No matching event types.</p>
-          </div>
-        )}
 
-        {/* Inactive first (like Cal.com shows hidden on top) */}
-        {inactiveTypes.map((et) => (
-          <EventTypeRow
-            key={et.id}
-            et={et}
-            profile={profile}
-            onEdit={openEdit}
-            onToggle={handleToggle}
-            onDelete={confirmDelete}
-            onDuplicate={handleDuplicate}
-            onCopyLink={copyLink}
-          />
-        ))}
-        {activeTypes.map((et) => (
-          <EventTypeRow
-            key={et.id}
-            et={et}
-            profile={profile}
-            onEdit={openEdit}
-            onToggle={handleToggle}
-            onDelete={confirmDelete}
-            onDuplicate={handleDuplicate}
-            onCopyLink={copyLink}
-          />
-        ))}
+        {/* ── Event type rows ──────────────────────────── */}
+        {eventTypes.length > 0 && (
+          <ul className="divide-y divide-border">
+            {eventTypes.map((et) => (
+              <EventTypeRow
+                key={et.id}
+                et={et}
+                profile={profile}
+                onEdit={openEdit}
+                onToggle={handleToggle}
+                onDelete={confirmDelete}
+                onDuplicate={handleDuplicate}
+                onCopyLink={copyLink}
+              />
+            ))}
+          </ul>
+        )}
       </div>
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto bg-card border-border">
+      {/* ── Create dialog (lightweight — title/slug/duration only) ── */}
+      <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle>
-              {editing ? "Edit event type" : "New event type"}
+            <DialogTitle className="text-base font-semibold">
+              Add new event type
             </DialogTitle>
-            <DialogDescription>
-              {editing
-                ? "Update the details for this event type."
-                : "Create a new event type for people to book."}
+            <DialogDescription className="text-sm text-muted-foreground">
+              Create a new event type to start accepting bookings.
             </DialogDescription>
           </DialogHeader>
 
-          <Tabs defaultValue="general" className="mt-1">
-            <TabsList className="grid grid-cols-3 w-full bg-secondary">
-              <TabsTrigger value="general">General</TabsTrigger>
-              <TabsTrigger value="advanced">Advanced</TabsTrigger>
-              <TabsTrigger value="questions">Questions</TabsTrigger>
+          <div className="space-y-4 py-1">
+            {/* Title */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">
+                Title <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                placeholder="Quick Chat"
+                value={form.title}
+                autoFocus
+                onChange={(e) =>
+                  setForm((f) => ({
+                    ...f,
+                    title: e.target.value,
+                    slug: toSlug(e.target.value),
+                  }))
+                }
+              />
+            </div>
+
+            {/* URL */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">
+                URL <span className="text-destructive">*</span>
+              </Label>
+              <div className="flex rounded-md overflow-hidden border border-input focus-within:ring-1 focus-within:ring-ring">
+                <span className="flex items-center px-3 bg-muted text-muted-foreground text-sm border-r border-input whitespace-nowrap shrink-0">
+                  /{profile.username}/
+                </span>
+                <Input
+                  placeholder="quick-chat"
+                  value={form.slug}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, slug: e.target.value }))
+                  }
+                  className="border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+                />
+              </div>
+            </div>
+
+            {/* Duration */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">Duration</Label>
+              <Select
+                value={String(form.duration)}
+                onValueChange={(v) =>
+                  setForm((f) => ({ ...f, duration: Number(v) }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DURATION_OPTIONS.map((d) => (
+                    <SelectItem key={d} value={String(d)}>
+                      {d} minutes
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Color */}
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">Color</Label>
+              <div className="flex gap-2 flex-wrap">
+                {EVENT_COLORS.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    title={c}
+                    className={`h-6 w-6 rounded-full border-2 transition-transform ${
+                      form.color === c
+                        ? "border-foreground scale-110"
+                        : "border-transparent hover:scale-105"
+                    }`}
+                    style={{ backgroundColor: c }}
+                    onClick={() => setForm((f) => ({ ...f, color: c }))}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setCreateOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleCreate}>Continue</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Edit dialog (full settings) ── */}
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="sm:max-w-xl max-h-[88vh] overflow-y-auto bg-card border-border">
+          <DialogHeader>
+            <DialogTitle className="text-base font-semibold">
+              Edit event type
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground">
+              Make changes to your event type settings.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs defaultValue="setup" className="mt-1">
+            <TabsList className="grid grid-cols-3 w-full bg-muted/50 h-9">
+              <TabsTrigger value="setup" className="text-xs">
+                Setup
+              </TabsTrigger>
+              <TabsTrigger value="availability" className="text-xs">
+                Availability
+              </TabsTrigger>
+              <TabsTrigger value="advanced" className="text-xs">
+                Advanced
+              </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="general" className="space-y-4 pt-3">
-              <div>
-                <Label>Title *</Label>
+            {/* ── Setup tab ── */}
+            <TabsContent value="setup" className="space-y-5 pt-4">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">
+                  Title <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   placeholder="Quick Chat"
                   value={form.title}
-                  onChange={(e) => {
-                    setForm({
-                      ...form,
-                      title: e.target.value,
-                      slug: editing
-                        ? form.slug
-                        : e.target.value
-                            .toLowerCase()
-                            .replace(/[^a-z0-9]+/g, "-")
-                            .replace(/^-|-$/g, ""),
-                    });
-                  }}
-                  className="mt-1"
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, title: e.target.value }))
+                  }
                 />
               </div>
-              <div>
-                <Label>URL Slug *</Label>
-                <div className="flex items-center gap-0 mt-1">
-                  <span className="text-sm text-muted-foreground bg-secondary border border-r-0 border-border rounded-l-md px-3 py-2 h-10 flex items-center">
+
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">URL</Label>
+                <div className="flex rounded-md overflow-hidden border border-input focus-within:ring-1 focus-within:ring-ring">
+                  <span className="flex items-center px-3 bg-muted text-muted-foreground text-sm border-r border-input whitespace-nowrap shrink-0">
                     /{profile.username}/
                   </span>
                   <Input
-                    placeholder="quick-chat"
                     value={form.slug}
-                    onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                    className="rounded-l-none"
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, slug: e.target.value }))
+                    }
+                    className="border-0 rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
                   />
                 </div>
               </div>
-              <div>
-                <Label>Description</Label>
+
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">Description</Label>
                 <Textarea
                   placeholder="A brief description of this event..."
                   value={form.description}
-                  onChange={(e) => setForm({ ...form, description: e.target.value })}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, description: e.target.value }))
+                  }
                   rows={3}
-                  className="mt-1"
+                  className="resize-none"
                 />
               </div>
+
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Duration</Label>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium">Duration</Label>
                   <Select
                     value={String(form.duration)}
-                    onValueChange={(v) => setForm({ ...form, duration: Number(v) })}
+                    onValueChange={(v) =>
+                      setForm((f) => ({ ...f, duration: Number(v) }))
+                    }
                   >
-                    <SelectTrigger className="mt-1">
+                    <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {DURATION_OPTIONS.map((d) => (
                         <SelectItem key={d} value={String(d)}>
-                          {d} min
+                          {d} minutes
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label>Color</Label>
-                  <div className="flex gap-1.5 mt-2 flex-wrap">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium">Color</Label>
+                  <div className="flex gap-2 flex-wrap pt-1">
                     {EVENT_COLORS.map((c) => (
                       <button
                         key={c}
                         type="button"
-                        className={`h-6 w-6 rounded-full border-2 transition-all ${
+                        className={`h-6 w-6 rounded-full border-2 transition-transform ${
                           form.color === c
                             ? "border-foreground scale-110"
                             : "border-transparent hover:scale-105"
                         }`}
                         style={{ backgroundColor: c }}
-                        onClick={() => setForm({ ...form, color: c })}
+                        onClick={() => setForm((f) => ({ ...f, color: c }))}
                       />
                     ))}
                   </div>
                 </div>
               </div>
+
+              {/* Custom questions section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-sm font-medium">
+                    Booking questions
+                  </Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 gap-1 text-xs"
+                    onClick={addQuestion}
+                  >
+                    <Plus className="h-3 w-3" />
+                    Add question
+                  </Button>
+                </div>
+                {form.customQuestions.length === 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    No custom questions yet. Add questions to collect info from
+                    bookers.
+                  </p>
+                )}
+                {form.customQuestions.map((q, idx) => (
+                  <div
+                    key={q.id}
+                    className="border border-border rounded-lg p-3 space-y-2 bg-muted/20"
+                  >
+                    <div className="flex items-start gap-2">
+                      <Input
+                        placeholder="Question label"
+                        value={q.label}
+                        onChange={(e) =>
+                          updateQuestion(idx, { label: e.target.value })
+                        }
+                        className="flex-1 h-8 text-sm"
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive shrink-0"
+                        onClick={() => removeQuestion(idx)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Select
+                        value={q.type}
+                        onValueChange={(v) =>
+                          updateQuestion(idx, {
+                            type: v as "text" | "textarea" | "select",
+                          })
+                        }
+                      >
+                        <SelectTrigger className="w-32 h-7 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="text">Short text</SelectItem>
+                          <SelectItem value="textarea">Long text</SelectItem>
+                          <SelectItem value="select">Dropdown</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={q.required}
+                          onChange={(e) =>
+                            updateQuestion(idx, { required: e.target.checked })
+                          }
+                          className="rounded"
+                        />
+                        Required
+                      </label>
+                    </div>
+                    {q.type === "select" && (
+                      <Input
+                        placeholder="Option 1, Option 2, Option 3"
+                        value={q.options?.join(", ") || ""}
+                        onChange={(e) =>
+                          updateQuestion(idx, {
+                            options: e.target.value
+                              .split(",")
+                              .map((o) => o.trim())
+                              .filter(Boolean),
+                          })
+                        }
+                        className="text-xs h-7"
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
             </TabsContent>
 
-            <TabsContent value="advanced" className="space-y-4 pt-3">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Buffer before</Label>
-                  <Select
-                    value={String(form.bufferBefore)}
-                    onValueChange={(v) => setForm({ ...form, bufferBefore: Number(v) })}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {BUFFER_OPTIONS.map((b) => (
-                        <SelectItem key={b} value={String(b)}>
-                          {b === 0 ? "No buffer" : `${b} min`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Buffer after</Label>
-                  <Select
-                    value={String(form.bufferAfter)}
-                    onValueChange={(v) => setForm({ ...form, bufferAfter: Number(v) })}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {BUFFER_OPTIONS.map((b) => (
-                        <SelectItem key={b} value={String(b)}>
-                          {b === 0 ? "No buffer" : `${b} min`}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label>Minimum notice (hours)</Label>
-                <p className="text-xs text-muted-foreground mb-1">
+            {/* ── Availability tab ── */}
+            <TabsContent value="availability" className="space-y-5 pt-4">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">
+                  Minimum notice (hours)
+                </Label>
+                <p className="text-xs text-muted-foreground">
                   How far in advance must bookings be made?
                 </p>
                 <Input
@@ -459,12 +679,19 @@ export default function EventTypesPage() {
                   min={0}
                   max={720}
                   value={form.minNotice}
-                  onChange={(e) => setForm({ ...form, minNotice: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      minNotice: Number(e.target.value),
+                    }))
+                  }
                 />
               </div>
-              <div>
-                <Label>Booking window (days)</Label>
-                <p className="text-xs text-muted-foreground mb-1">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-medium">
+                  Booking window (days)
+                </Label>
+                <p className="text-xs text-muted-foreground">
                   How far into the future can someone book?
                 </p>
                 <Input
@@ -472,96 +699,80 @@ export default function EventTypesPage() {
                   min={1}
                   max={365}
                   value={form.maxFutureDays}
-                  onChange={(e) => setForm({ ...form, maxFutureDays: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      maxFutureDays: Number(e.target.value),
+                    }))
+                  }
                 />
               </div>
             </TabsContent>
 
-            <TabsContent value="questions" className="space-y-4 pt-3">
-              <p className="text-sm text-muted-foreground">
-                Add custom questions to collect info from the booker.
-              </p>
-              {form.customQuestions.map((q, idx) => (
-                <div key={q.id} className="border border-border rounded-lg p-3 space-y-2 bg-secondary/30">
-                  <div className="flex items-start gap-2">
-                    <Input
-                      placeholder="Question label"
-                      value={q.label}
-                      onChange={(e) => updateQuestion(idx, { label: e.target.value })}
-                      className="flex-1"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-destructive shrink-0"
-                      onClick={() => removeQuestion(idx)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Select
-                      value={q.type}
-                      onValueChange={(v) => updateQuestion(idx, { type: v as "text" | "textarea" | "select" })}
-                    >
-                      <SelectTrigger className="w-32 h-8 text-xs">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="text">Short text</SelectItem>
-                        <SelectItem value="textarea">Long text</SelectItem>
-                        <SelectItem value="select">Dropdown</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={q.required}
-                        onChange={(e) => updateQuestion(idx, { required: e.target.checked })}
-                        className="rounded border-border"
-                      />
-                      Required
-                    </label>
-                  </div>
-                  {q.type === "select" && (
-                    <Input
-                      placeholder="Option 1, Option 2, Option 3"
-                      value={q.options?.join(", ") || ""}
-                      onChange={(e) =>
-                        updateQuestion(idx, {
-                          options: e.target.value.split(",").map((o) => o.trim()).filter(Boolean),
-                        })
-                      }
-                      className="text-xs"
-                    />
-                  )}
+            {/* ── Advanced tab ── */}
+            <TabsContent value="advanced" className="space-y-5 pt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium">Buffer before</Label>
+                  <Select
+                    value={String(form.bufferBefore)}
+                    onValueChange={(v) =>
+                      setForm((f) => ({ ...f, bufferBefore: Number(v) }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BUFFER_OPTIONS.map((b) => (
+                        <SelectItem key={b} value={String(b)}>
+                          {b === 0 ? "No buffer" : `${b} min`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              ))}
-              <Button variant="outline" size="sm" onClick={addQuestion} className="gap-1.5">
-                <Plus className="h-3.5 w-3.5" />
-                Add question
-              </Button>
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium">Buffer after</Label>
+                  <Select
+                    value={String(form.bufferAfter)}
+                    onValueChange={(v) =>
+                      setForm((f) => ({ ...f, bufferAfter: Number(v) }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BUFFER_OPTIONS.map((b) => (
+                        <SelectItem key={b} value={String(b)}>
+                          {b === 0 ? "No buffer" : `${b} min`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-border">
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="pt-2 border-t border-border gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setEditOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>
-              {editing ? "Save" : "Create"}
-            </Button>
-          </div>
+            <Button onClick={handleSave}>Update</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation */}
+      {/* ── Delete confirmation ── */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete event type?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. Anyone with the link will no longer be able to book.
+              Anyone who you've shared this link with will no longer be able to
+              book using it.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -598,74 +809,179 @@ function EventTypeRow({
   onDuplicate: (id: string) => void;
   onCopyLink: (slug: string) => void;
 }) {
+  const bookingUrl = `/${profile.username}/${et.slug}`;
+
   return (
-    <div className="flex items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors group">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <h3 className="text-sm font-bold text-foreground">{et.title}</h3>
-          <span className="text-xs text-muted-foreground font-mono">
-            /{profile.username}/{et.slug}
-          </span>
-        </div>
+    <li
+      className={`
+        group relative flex items-center gap-4 px-5 py-4
+        transition-colors hover:bg-muted/40
+        ${!et.isActive ? "opacity-60" : ""}
+      `}
+    >
+      {/* ── Left color accent bar ─────────────────────── */}
+      <div
+        className="absolute left-0 top-0 bottom-0 w-[3px] rounded-r-sm transition-opacity"
+        style={{
+          backgroundColor: et.color,
+          opacity: et.isActive ? 1 : 0.5,
+        }}
+      />
+
+      {/* ── Main content ──────────────────────────────── */}
+      <div className="flex-1 min-w-0 pl-1">
+        {/* Title row */}
         <div className="flex items-center gap-2">
-          <span className="cal-badge bg-secondary text-muted-foreground">
-            <Clock className="h-3 w-3 mr-1" />
-            {et.duration}m
+          <button
+            className="text-sm font-semibold text-foreground hover:text-foreground/80 truncate text-left transition-colors"
+            onClick={() => onEdit(et)}
+          >
+            {et.title}
+          </button>
+          {!et.isActive && (
+            <span className="shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground border border-border">
+              Hidden
+            </span>
+          )}
+        </div>
+
+        {/* Slug + duration row */}
+        <div className="flex items-center gap-2 mt-0.5">
+          <a
+            href={`/book${bookingUrl}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors truncate"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {bookingUrl}
+          </a>
+          <span className="text-muted-foreground/40 text-xs">·</span>
+          <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            {et.duration} mins
           </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 shrink-0">
-        {!et.isActive && (
-          <span className="text-xs text-muted-foreground mr-2 font-medium">Hidden</span>
-        )}
+      {/* ── Row actions ───────────────────────────────── */}
+      <div className="flex items-center gap-1 shrink-0">
+        {/* Edit button — visible on hover */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 px-2.5 gap-1.5 text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={() => onEdit(et)}
+        >
+          <Pencil className="h-3.5 w-3.5" />
+          Edit
+        </Button>
+
+        {/* Preview link — visible on hover */}
+        <a
+          href={`/book${bookingUrl}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          tabIndex={-1}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Preview"
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+          </Button>
+        </a>
+
+        {/* Toggle — always visible */}
         <Switch
           checked={et.isActive}
           onCheckedChange={() => onToggle(et)}
+          className="data-[state=checked]:bg-green-500 scale-90"
         />
-        <Link to={`/book/${et.slug}`} target="_blank">
-          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-            <ExternalLink className="h-4 w-4" />
-          </Button>
-        </Link>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-          onClick={() => onCopyLink(et.slug)}
-        >
-          <LinkIcon className="h-4 w-4" />
-        </Button>
+
+        {/* ⋯ menu — always visible */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground"
+            >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-44 bg-popover border-border">
-            <DropdownMenuItem onClick={() => onEdit(et)}>
-              <Pencil className="h-4 w-4 mr-2" />
+          <DropdownMenuContent
+            align="end"
+            className="w-48 bg-popover border-border text-sm"
+          >
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer"
+              onClick={() => onEdit(et)}
+            >
+              <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
               Edit
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDuplicate(et.id)}>
-              <Files className="h-4 w-4 mr-2" />
+
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer"
+              onClick={() => onDuplicate(et.id)}
+            >
+              <Files className="h-3.5 w-3.5 text-muted-foreground" />
               Duplicate
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onCopyLink(et.slug)}>
-              <Copy className="h-4 w-4 mr-2" />
+
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer"
+              onClick={() => onCopyLink(et.slug)}
+            >
+              <LinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
               Copy link
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+
             <DropdownMenuItem
-              onClick={() => onDelete(et.id)}
-              className="text-destructive focus:text-destructive"
+              className="gap-2 cursor-pointer"
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  `<iframe src="${window.location.origin}/book/${et.slug}" />`
+                );
+                toast.success("Embed code copied");
+              }}
             >
-              <Trash2 className="h-4 w-4 mr-2" />
+              <Code2 className="h-3.5 w-3.5 text-muted-foreground" />
+              Embed
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer"
+              onClick={() => onToggle(et)}
+            >
+              {et.isActive ? (
+                <>
+                  <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
+                  Hide from profile
+                </>
+              ) : (
+                <>
+                  <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                  Show on profile
+                </>
+              )}
+            </DropdownMenuItem>
+
+            <DropdownMenuSeparator />
+
+            <DropdownMenuItem
+              className="gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+              onClick={() => onDelete(et.id)}
+            >
+              <Trash2 className="h-3.5 w-3.5" />
               Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </div>
+    </li>
   );
 }
