@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Booking } from "@/lib/types";
 import {
@@ -11,7 +10,6 @@ import {
   rescheduleBooking as rescheduleBookingFn,
   getEventType,
   getAvailableSlots,
-  getAvailability,
 } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,11 +23,9 @@ import {
   Mail,
   X,
   RotateCcw,
-  MessageSquare,
   ChevronDown,
   ChevronUp,
   Video,
-  FileText,
   Search,
   CalendarDays,
   CalendarX,
@@ -54,11 +50,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
-
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [tab, setTab] = useState("upcoming");
@@ -68,7 +59,6 @@ export default function BookingsPage() {
   const [cancelReason, setCancelReason] = useState("");
   const [expandedBooking, setExpandedBooking] = useState<string | null>(null);
 
-  // Reschedule state
   const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
   const [rescheduleTarget, setRescheduleTarget] = useState<Booking | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
@@ -179,33 +169,37 @@ export default function BookingsPage() {
     cancelled: bookings.filter((b) => b.status === "cancelled" || b.status === "rescheduled").length,
   };
 
+  // Group bookings by date
+  const grouped: Record<string, Booking[]> = {};
+  filtered.forEach((b) => {
+    if (!grouped[b.date]) grouped[b.date] = [];
+    grouped[b.date].push(b);
+  });
+
   return (
     <DashboardLayout>
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Bookings</h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <h1 className="text-xl font-bold text-foreground tracking-tight">Bookings</h1>
+        <p className="text-[13px] text-muted-foreground mt-1">
           See upcoming and past events booked through your event type links.
         </p>
       </div>
 
       <Tabs value={tab} onValueChange={setTab}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-          <TabsList>
-            <TabsTrigger value="upcoming" className="gap-1.5">
-              <CalendarCheck className="h-3.5 w-3.5" />
+          <TabsList className="h-9">
+            <TabsTrigger value="upcoming" className="gap-1.5 text-[13px]">
               Upcoming
               {counts.upcoming > 0 && (
-                <span className="ml-1 text-xs bg-foreground/10 rounded-full px-1.5">
+                <span className="ml-1 text-[11px] bg-foreground/10 rounded-full px-1.5 py-0.5 font-medium">
                   {counts.upcoming}
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="past" className="gap-1.5">
-              <CalendarDays className="h-3.5 w-3.5" />
+            <TabsTrigger value="past" className="gap-1.5 text-[13px]">
               Past
             </TabsTrigger>
-            <TabsTrigger value="cancelled" className="gap-1.5">
-              <CalendarX className="h-3.5 w-3.5" />
+            <TabsTrigger value="cancelled" className="gap-1.5 text-[13px]">
               Cancelled
             </TabsTrigger>
           </TabsList>
@@ -216,20 +210,20 @@ export default function BookingsPage() {
               placeholder="Search bookings..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 w-full sm:w-56 h-9 text-sm"
+              className="pl-8 w-full sm:w-56 h-9 text-[13px]"
             />
           </div>
         </div>
 
         <TabsContent value={tab}>
-          <div className="cal-card overflow-hidden divide-y divide-border">
+          <div className="rounded-lg border border-border overflow-hidden bg-card">
             {filtered.length === 0 && (
-              <div className="px-6 py-16 text-center">
-                <CalendarDays className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                <p className="text-sm font-medium text-foreground mb-1">
+              <div className="px-6 py-20 text-center">
+                <CalendarDays className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
+                <p className="text-sm font-semibold text-foreground mb-1">
                   No {tab} bookings
                 </p>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground max-w-xs mx-auto">
                   {tab === "upcoming"
                     ? "When someone books a meeting with you, it will show up here."
                     : tab === "past"
@@ -238,191 +232,203 @@ export default function BookingsPage() {
                 </p>
               </div>
             )}
-            {filtered.map((b) => (
-              <div key={b.id}>
-                <div
-                  className="flex items-start sm:items-center justify-between px-5 py-4 hover:bg-cal-subtle transition-colors cursor-pointer"
-                  onClick={() => toggleExpanded(b.id)}
-                >
-                  <div className="space-y-1.5 flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-semibold text-foreground">
-                        {b.eventTypeTitle}
-                      </h3>
-                      {b.status === "rescheduled" && (
-                        <span className="text-[10px] bg-cal-info/10 text-cal-info px-1.5 py-0.5 rounded font-medium">
-                          Rescheduled
-                        </span>
-                      )}
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {formatDateShort(b.date)}
-                      </span>
-                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Clock className="h-3 w-3" />
-                        {formatTime(b.startTime)} – {formatTime(b.endTime)}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <User className="h-3 w-3" />
-                        {b.bookerName}
-                      </span>
-                      <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Mail className="h-3 w-3" />
-                        {b.bookerEmail}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0 ml-3">
-                    {b.status === "upcoming" && (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="hidden sm:flex gap-1 text-xs h-7"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openReschedule(b);
-                          }}
-                        >
-                          <RotateCcw className="h-3 w-3" />
-                          Reschedule
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive gap-1 text-xs h-7"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCancelClick(b.id);
-                          }}
-                        >
-                          <X className="h-3 w-3" />
-                          Cancel
-                        </Button>
-                      </>
-                    )}
-                    {b.status === "cancelled" && (
-                      <span className="text-xs text-destructive font-medium">
-                        Cancelled
-                      </span>
-                    )}
-                    {expandedBooking === b.id ? (
-                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                    ) : (
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </div>
-                </div>
 
-                {/* Expanded details */}
-                {expandedBooking === b.id && (
-                  <div className="px-5 pb-4 bg-cal-subtle/50 border-t border-border animate-fade-in">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-3">
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase mb-1">
-                          Date & Time
-                        </p>
-                        <p className="text-sm text-foreground">
-                          {formatDateFull(b.date)}
-                        </p>
-                        <p className="text-sm text-foreground">
-                          {formatTime(b.startTime)} – {formatTime(b.endTime)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase mb-1">
-                          Booked by
-                        </p>
-                        <p className="text-sm text-foreground">{b.bookerName}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {b.bookerEmail}
-                        </p>
-                      </div>
-                      {b.bookerNotes && (
-                        <div className="sm:col-span-2">
-                          <p className="text-xs font-medium text-muted-foreground uppercase mb-1">
-                            Notes
-                          </p>
-                          <p className="text-sm text-foreground bg-background rounded-md p-2.5 border border-border">
-                            {b.bookerNotes}
+            {Object.entries(grouped).map(([date, dateBookings]) => (
+              <div key={date}>
+                {/* Date header */}
+                <div className="px-5 py-2 bg-secondary/30 border-b border-border">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    {formatDateFull(date)}
+                  </span>
+                </div>
+                {dateBookings.map((b) => (
+                  <div key={b.id} className="border-b border-border last:border-b-0">
+                    <div
+                      className="flex items-center justify-between px-5 py-3.5 hover:bg-secondary/20 transition-colors cursor-pointer"
+                      onClick={() => toggleExpanded(b.id)}
+                    >
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        {/* Time column */}
+                        <div className="w-28 shrink-0">
+                          <p className="text-[13px] font-medium text-foreground">
+                            {formatTime(b.startTime)} – {formatTime(b.endTime)}
                           </p>
                         </div>
-                      )}
-                      {b.customResponses &&
-                        Object.keys(b.customResponses).length > 0 && (
-                          <div className="sm:col-span-2">
-                            <p className="text-xs font-medium text-muted-foreground uppercase mb-1">
-                              Additional Information
+
+                        {/* Event info */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-[13px] font-semibold text-foreground truncate">
+                              {b.eventTypeTitle}
+                            </h3>
+                            {b.status === "rescheduled" && (
+                              <span className="text-[10px] bg-cal-info/10 text-cal-info px-1.5 py-0.5 rounded font-medium">
+                                Rescheduled
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 mt-0.5">
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <User className="h-3 w-3" />
+                              {b.bookerName}
+                            </span>
+                            <span className="flex items-center gap-1 text-xs text-muted-foreground truncate">
+                              <Mail className="h-3 w-3 shrink-0" />
+                              {b.bookerEmail}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0 ml-3">
+                        {b.status === "upcoming" && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="hidden sm:flex gap-1 text-xs h-7"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openReschedule(b);
+                              }}
+                            >
+                              <RotateCcw className="h-3 w-3" />
+                              Reschedule
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive gap-1 text-xs h-7"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCancelClick(b.id);
+                              }}
+                            >
+                              <X className="h-3 w-3" />
+                              Cancel
+                            </Button>
+                          </>
+                        )}
+                        {b.status === "cancelled" && (
+                          <span className="text-[11px] text-destructive font-medium bg-destructive/10 px-2 py-0.5 rounded">
+                            Cancelled
+                          </span>
+                        )}
+                        {expandedBooking === b.id ? (
+                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Expanded details */}
+                    {expandedBooking === b.id && (
+                      <div className="px-5 pb-4 bg-secondary/10 border-t border-border animate-fade-in">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-4">
+                          <div>
+                            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                              Date & Time
                             </p>
-                            <div className="space-y-2">
-                              {Object.entries(b.customResponses).map(
-                                ([q, a]) => (
-                                  <div
-                                    key={q}
-                                    className="bg-background rounded-md p-2.5 border border-border"
-                                  >
-                                    <p className="text-xs text-muted-foreground">
-                                      {q}
-                                    </p>
-                                    <p className="text-sm text-foreground mt-0.5">
-                                      {a}
-                                    </p>
-                                  </div>
-                                )
-                              )}
+                            <p className="text-[13px] text-foreground">
+                              {formatDateFull(b.date)}
+                            </p>
+                            <p className="text-[13px] text-foreground">
+                              {formatTime(b.startTime)} – {formatTime(b.endTime)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                              Attendee
+                            </p>
+                            <p className="text-[13px] text-foreground">{b.bookerName}</p>
+                            <p className="text-[13px] text-muted-foreground">
+                              {b.bookerEmail}
+                            </p>
+                          </div>
+                          {b.bookerNotes && (
+                            <div className="sm:col-span-2">
+                              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                                Notes
+                              </p>
+                              <p className="text-[13px] text-foreground bg-background rounded-md p-3 border border-border">
+                                {b.bookerNotes}
+                              </p>
                             </div>
+                          )}
+                          {b.customResponses &&
+                            Object.keys(b.customResponses).length > 0 && (
+                              <div className="sm:col-span-2">
+                                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">
+                                  Additional Information
+                                </p>
+                                <div className="space-y-2">
+                                  {Object.entries(b.customResponses).map(
+                                    ([q, a]) => (
+                                      <div
+                                        key={q}
+                                        className="bg-background rounded-md p-3 border border-border"
+                                      >
+                                        <p className="text-xs text-muted-foreground">
+                                          {q}
+                                        </p>
+                                        <p className="text-[13px] text-foreground mt-0.5">
+                                          {a}
+                                        </p>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          {b.cancelReason && (
+                            <div className="sm:col-span-2">
+                              <p className="text-[11px] font-semibold text-destructive uppercase tracking-wider mb-1">
+                                Cancel reason
+                              </p>
+                              <p className="text-[13px] text-foreground">{b.cancelReason}</p>
+                            </div>
+                          )}
+                          <div className="sm:col-span-2">
+                            <p className="text-xs text-muted-foreground">
+                              Booked on{" "}
+                              {new Date(b.createdAt).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                                hour: "numeric",
+                                minute: "2-digit",
+                              })}
+                            </p>
+                          </div>
+                        </div>
+
+                        {b.status === "upcoming" && (
+                          <div className="flex items-center gap-2 pt-2 border-t border-border sm:hidden">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-1 text-xs flex-1"
+                              onClick={() => openReschedule(b)}
+                            >
+                              <RotateCcw className="h-3 w-3" />
+                              Reschedule
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive gap-1 text-xs flex-1"
+                              onClick={() => handleCancelClick(b.id)}
+                            >
+                              <X className="h-3 w-3" />
+                              Cancel
+                            </Button>
                           </div>
                         )}
-                      {b.cancelReason && (
-                        <div className="sm:col-span-2">
-                          <p className="text-xs font-medium text-destructive uppercase mb-1">
-                            Cancel reason
-                          </p>
-                          <p className="text-sm text-foreground">{b.cancelReason}</p>
-                        </div>
-                      )}
-                      <div className="sm:col-span-2">
-                        <p className="text-xs text-muted-foreground">
-                          Booked on{" "}
-                          {new Date(b.createdAt).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                            hour: "numeric",
-                            minute: "2-digit",
-                          })}
-                        </p>
-                      </div>
-                    </div>
-
-                    {b.status === "upcoming" && (
-                      <div className="flex items-center gap-2 pt-2 border-t border-border sm:hidden">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="gap-1 text-xs flex-1"
-                          onClick={() => openReschedule(b)}
-                        >
-                          <RotateCcw className="h-3 w-3" />
-                          Reschedule
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive gap-1 text-xs flex-1"
-                          onClick={() => handleCancelClick(b.id)}
-                        >
-                          <X className="h-3 w-3" />
-                          Cancel
-                        </Button>
                       </div>
                     )}
                   </div>
-                )}
+                ))}
               </div>
             ))}
           </div>
@@ -433,19 +439,19 @@ export default function BookingsPage() {
       <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Cancel booking?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This booking will be cancelled and the time slot will be freed up.
+            <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+            <AlertDialogDescription className="text-[13px]">
+              This booking will be cancelled and the attendee will be notified. The time slot will be freed up.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="py-2">
-            <Label className="text-sm">Reason (optional)</Label>
+            <Label className="text-[13px]">Reason (optional)</Label>
             <Textarea
               placeholder="Let them know why you're cancelling..."
               value={cancelReason}
               onChange={(e) => setCancelReason(e.target.value)}
               rows={2}
-              className="mt-1.5"
+              className="mt-1.5 text-[13px]"
             />
           </div>
           <AlertDialogFooter>
@@ -462,45 +468,46 @@ export default function BookingsPage() {
 
       {/* Reschedule Dialog */}
       <Dialog open={rescheduleDialogOpen} onOpenChange={setRescheduleDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Reschedule booking</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-base">Reschedule booking</DialogTitle>
+            <DialogDescription className="text-[13px]">
               {rescheduleTarget && (
                 <>
-                  Rescheduling {rescheduleTarget.eventTypeTitle} with{" "}
-                  {rescheduleTarget.bookerName}
+                  Reschedule <span className="font-medium text-foreground">{rescheduleTarget.bookerName}</span>'s{" "}
+                  {rescheduleTarget.eventTypeTitle} booking.
                 </>
               )}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div>
-              <Label>New date</Label>
+              <Label className="text-[13px]">New date</Label>
               <Input
                 type="date"
                 value={rescheduleDate}
                 onChange={(e) => handleRescheduleDateChange(e.target.value)}
                 min={new Date().toISOString().split("T")[0]}
+                className="mt-1.5 text-[13px]"
               />
             </div>
             {rescheduleDate && (
               <div>
-                <Label>Available times</Label>
+                <Label className="text-[13px]">Available times</Label>
                 {rescheduleSlots.length === 0 ? (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    No available times on this date.
+                  <p className="text-xs text-muted-foreground mt-2">
+                    No available slots on this date.
                   </p>
                 ) : (
-                  <div className="grid grid-cols-3 gap-1.5 mt-1.5 max-h-48 overflow-y-auto">
+                  <div className="grid grid-cols-3 gap-1.5 mt-2 max-h-40 overflow-y-auto">
                     {rescheduleSlots.map((slot) => (
                       <button
                         key={slot}
                         onClick={() => setRescheduleTime(slot)}
-                        className={`text-sm py-1.5 px-2 rounded-md border transition-colors text-center ${
+                        className={`py-1.5 px-2 rounded-md text-xs font-medium text-center transition-colors border ${
                           rescheduleTime === slot
-                            ? "bg-primary text-primary-foreground border-primary"
-                            : "border-border hover:bg-secondary text-foreground"
+                            ? "bg-foreground text-background border-foreground"
+                            : "border-border hover:border-foreground/30 text-foreground"
                         }`}
                       >
                         {formatTime(slot)}
@@ -510,20 +517,14 @@ export default function BookingsPage() {
                 )}
               </div>
             )}
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => setRescheduleDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleReschedule}
-                disabled={!rescheduleDate || !rescheduleTime}
-              >
-                Reschedule
-              </Button>
-            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-3 border-t border-border">
+            <Button variant="outline" onClick={() => setRescheduleDialogOpen(false)} className="text-[13px]">
+              Cancel
+            </Button>
+            <Button onClick={handleReschedule} disabled={!rescheduleDate || !rescheduleTime} className="text-[13px]">
+              Reschedule
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
