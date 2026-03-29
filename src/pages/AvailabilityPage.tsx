@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
 import {
   AvailabilitySchedule,
@@ -47,33 +47,20 @@ import {
   Globe,
   Plus,
   Trash2,
-  Copy,
   CalendarOff,
   CalendarClock,
   Clock,
+  Copy,
+  Check,
+  MoreHorizontal,
 } from "lucide-react";
 
 const TIMEZONES = [
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "America/Anchorage",
-  "America/Sao_Paulo",
-  "Pacific/Honolulu",
-  "Europe/London",
-  "Europe/Paris",
-  "Europe/Berlin",
-  "Europe/Moscow",
-  "Asia/Tokyo",
-  "Asia/Shanghai",
-  "Asia/Kolkata",
-  "Asia/Dubai",
-  "Asia/Singapore",
-  "Australia/Sydney",
-  "Pacific/Auckland",
-  "Africa/Cairo",
-  "Africa/Johannesburg",
+  "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
+  "America/Anchorage", "America/Sao_Paulo", "Pacific/Honolulu",
+  "Europe/London", "Europe/Paris", "Europe/Berlin", "Europe/Moscow",
+  "Asia/Tokyo", "Asia/Shanghai", "Asia/Kolkata", "Asia/Dubai", "Asia/Singapore",
+  "Australia/Sydney", "Pacific/Auckland", "Africa/Cairo", "Africa/Johannesburg",
 ];
 
 export default function AvailabilityPage() {
@@ -212,35 +199,33 @@ export default function AvailabilityPage() {
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Availability</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-xl font-bold text-foreground tracking-tight">Availability</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">
             Configure times when you are available for bookings.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setNewScheduleDialogOpen(true)}
-            className="gap-1.5"
-          >
-            <Plus className="h-4 w-4" />
-            New schedule
-          </Button>
-        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setNewScheduleDialogOpen(true)}
+          className="gap-1.5 h-9 text-[13px]"
+        >
+          <Plus className="h-4 w-4" />
+          New schedule
+        </Button>
       </div>
 
-      {/* Schedule selector */}
+      {/* Schedule selector pills */}
       {schedules.length > 1 && (
-        <div className="flex items-center gap-2 mb-4 overflow-x-auto pb-1">
+        <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-1">
           {schedules.map((s) => (
             <button
               key={s.id}
               onClick={() => setActiveScheduleId(s.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors whitespace-nowrap ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium transition-colors whitespace-nowrap border ${
                 s.id === activeScheduleId
-                  ? "bg-foreground text-background"
-                  : "bg-secondary text-muted-foreground hover:text-foreground"
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-transparent text-muted-foreground border-border hover:border-foreground/30 hover:text-foreground"
               }`}
             >
               <Clock className="h-3 w-3" />
@@ -253,227 +238,255 @@ export default function AvailabilityPage() {
         </div>
       )}
 
-      <Tabs defaultValue="weekly">
-        <TabsList className="mb-4">
-          <TabsTrigger value="weekly" className="gap-1.5">
-            <CalendarClock className="h-3.5 w-3.5" />
-            Weekly hours
-          </TabsTrigger>
-          <TabsTrigger value="overrides" className="gap-1.5">
-            <CalendarOff className="h-3.5 w-3.5" />
-            Date overrides
-            {activeSchedule.dateOverrides.length > 0 && (
-              <span className="ml-1 text-xs bg-primary text-primary-foreground rounded-full h-4 w-4 flex items-center justify-center">
-                {activeSchedule.dateOverrides.length}
-              </span>
-            )}
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="weekly">
-          <div className="cal-card">
-            {/* Timezone */}
-            <div className="px-5 py-4 border-b border-border">
-              <div className="flex items-center gap-2 mb-3">
-                <Globe className="h-4 w-4 text-muted-foreground" />
-                <Label className="text-sm font-medium">Timezone</Label>
-              </div>
-              <Select
-                value={activeSchedule.timezone}
-                onValueChange={updateTimezone}
-              >
-                <SelectTrigger className="w-full max-w-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {TIMEZONES.map((tz) => (
-                    <SelectItem key={tz} value={tz}>
-                      {tz.replace(/_/g, " ")}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Days */}
-            <div className="divide-y divide-border">
-              {activeSchedule.days.map((day) => (
-                <div
-                  key={day.dayOfWeek}
-                  className="flex items-center gap-4 px-5 py-3.5"
-                >
-                  <Switch
-                    checked={day.isEnabled}
-                    onCheckedChange={(v) =>
-                      updateDay(day.dayOfWeek, "isEnabled", v)
-                    }
-                  />
-                  <span
-                    className={`w-28 text-sm font-medium ${
-                      day.isEnabled
-                        ? "text-foreground"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {DAYS_OF_WEEK[day.dayOfWeek]}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main schedule editor */}
+        <div className="lg:col-span-2">
+          <Tabs defaultValue="weekly">
+            <TabsList className="mb-4 h-9">
+              <TabsTrigger value="weekly" className="gap-1.5 text-[13px]">
+                <CalendarClock className="h-3.5 w-3.5" />
+                Weekly hours
+              </TabsTrigger>
+              <TabsTrigger value="overrides" className="gap-1.5 text-[13px]">
+                <CalendarOff className="h-3.5 w-3.5" />
+                Date overrides
+                {activeSchedule.dateOverrides.length > 0 && (
+                  <span className="ml-1 text-[10px] bg-foreground text-background rounded-full h-4 min-w-[16px] flex items-center justify-center px-1">
+                    {activeSchedule.dateOverrides.length}
                   </span>
-                  {day.isEnabled ? (
-                    <div className="flex items-center gap-2">
-                      <Input
-                        type="time"
-                        value={day.startTime}
-                        onChange={(e) =>
-                          updateDay(day.dayOfWeek, "startTime", e.target.value)
-                        }
-                        className="w-28 text-sm"
-                      />
-                      <span className="text-muted-foreground text-sm">–</span>
-                      <Input
-                        type="time"
-                        value={day.endTime}
-                        onChange={(e) =>
-                          updateDay(day.dayOfWeek, "endTime", e.target.value)
-                        }
-                        className="w-28 text-sm"
-                      />
-                    </div>
-                  ) : (
-                    <span className="text-sm text-muted-foreground italic">
-                      Unavailable
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-
-            {/* Actions */}
-            <div className="px-5 py-3 border-t border-border flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                {!activeSchedule.isDefault && (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={setAsDefault}
-                      className="text-xs"
-                    >
-                      Set as default
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setDeleteDialogOpen(true)}
-                      className="text-xs text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5 mr-1" />
-                      Delete
-                    </Button>
-                  </>
                 )}
-              </div>
-              <Button onClick={handleSave} size="sm">
-                Save
-              </Button>
-            </div>
-          </div>
-        </TabsContent>
+              </TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="overrides">
-          <div className="cal-card">
-            <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">
-                  Date overrides
-                </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Block specific dates or set custom hours that override your
-                  weekly schedule.
-                </p>
-              </div>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setOverrideForm({
-                    date: "",
-                    isBlocked: true,
-                    startTime: "09:00",
-                    endTime: "17:00",
-                  });
-                  setOverrideDialogOpen(true);
-                }}
-                className="gap-1.5"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                Add override
-              </Button>
-            </div>
-
-            <div className="divide-y divide-border">
-              {activeSchedule.dateOverrides.length === 0 && (
-                <div className="px-6 py-12 text-center">
-                  <CalendarOff className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-sm text-muted-foreground">
-                    No date overrides yet.
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Add overrides to block specific dates or set custom hours.
-                  </p>
-                </div>
-              )}
-              {activeSchedule.dateOverrides
-                .sort((a, b) => a.date.localeCompare(b.date))
-                .map((override) => (
-                  <div
-                    key={override.id}
-                    className="flex items-center justify-between px-5 py-3"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`h-2 w-2 rounded-full ${
-                          override.isBlocked
-                            ? "bg-destructive"
-                            : "bg-cal-success"
-                        }`}
-                      />
-                      <div>
-                        <p className="text-sm font-medium text-foreground">
-                          {formatDateShort(override.date)}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {override.isBlocked
-                            ? "Blocked — no bookings"
-                            : `Custom: ${override.startTime} – ${override.endTime}`}
-                        </p>
-                      </div>
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleRemoveOverride(override.id)}
+            <TabsContent value="weekly">
+              <div className="rounded-lg border border-border bg-card overflow-hidden">
+                {/* Days */}
+                <div className="divide-y divide-border">
+                  {activeSchedule.days.map((day) => (
+                    <div
+                      key={day.dayOfWeek}
+                      className="flex items-center gap-4 px-5 py-3"
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
+                      <Switch
+                        checked={day.isEnabled}
+                        onCheckedChange={(v) =>
+                          updateDay(day.dayOfWeek, "isEnabled", v)
+                        }
+                      />
+                      <span
+                        className={`w-24 text-[13px] font-medium ${
+                          day.isEnabled
+                            ? "text-foreground"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {DAYS_OF_WEEK[day.dayOfWeek]}
+                      </span>
+                      {day.isEnabled ? (
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="time"
+                            value={day.startTime}
+                            onChange={(e) =>
+                              updateDay(day.dayOfWeek, "startTime", e.target.value)
+                            }
+                            className="w-28 text-[13px] h-8"
+                          />
+                          <span className="text-muted-foreground text-[13px]">–</span>
+                          <Input
+                            type="time"
+                            value={day.endTime}
+                            onChange={(e) =>
+                              updateDay(day.dayOfWeek, "endTime", e.target.value)
+                            }
+                            className="w-28 text-[13px] h-8"
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-[13px] text-muted-foreground">
+                          Unavailable
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Footer actions */}
+                <div className="px-5 py-3 border-t border-border flex items-center justify-between bg-secondary/20">
+                  <div className="flex items-center gap-2">
+                    {!activeSchedule.isDefault && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={setAsDefault}
+                          className="text-xs h-7"
+                        >
+                          <Check className="h-3 w-3 mr-1" />
+                          Set as default
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDeleteDialogOpen(true)}
+                          className="text-xs text-destructive hover:text-destructive h-7"
+                        >
+                          <Trash2 className="h-3 w-3 mr-1" />
+                          Delete
+                        </Button>
+                      </>
+                    )}
                   </div>
+                  <Button onClick={handleSave} size="sm" className="h-8 text-[13px]">
+                    Save
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="overrides">
+              <div className="rounded-lg border border-border bg-card overflow-hidden">
+                <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                  <div>
+                    <h3 className="text-[13px] font-semibold text-foreground">
+                      Date overrides
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Block specific dates or set custom hours.
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setOverrideForm({
+                        date: "",
+                        isBlocked: true,
+                        startTime: "09:00",
+                        endTime: "17:00",
+                      });
+                      setOverrideDialogOpen(true);
+                    }}
+                    className="gap-1.5 h-8 text-xs"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Add
+                  </Button>
+                </div>
+
+                <div className="divide-y divide-border">
+                  {activeSchedule.dateOverrides.length === 0 && (
+                    <div className="px-6 py-12 text-center">
+                      <CalendarOff className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-[13px] text-muted-foreground">
+                        No date overrides yet.
+                      </p>
+                    </div>
+                  )}
+                  {activeSchedule.dateOverrides
+                    .sort((a, b) => a.date.localeCompare(b.date))
+                    .map((override) => (
+                      <div
+                        key={override.id}
+                        className="flex items-center justify-between px-5 py-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`h-2 w-2 rounded-full ${
+                              override.isBlocked
+                                ? "bg-destructive"
+                                : "bg-cal-success"
+                            }`}
+                          />
+                          <div>
+                            <p className="text-[13px] font-medium text-foreground">
+                              {formatDateShort(override.date)}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {override.isBlocked
+                                ? "Blocked — unavailable all day"
+                                : `Custom: ${override.startTime} – ${override.endTime}`}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                          onClick={() => handleRemoveOverride(override.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Right sidebar - schedule info */}
+        <div className="space-y-4">
+          <div className="rounded-lg border border-border bg-card p-5">
+            <h3 className="text-[13px] font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              Timezone
+            </h3>
+            <Select
+              value={activeSchedule.timezone}
+              onValueChange={updateTimezone}
+            >
+              <SelectTrigger className="w-full text-[13px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TIMEZONES.map((tz) => (
+                  <SelectItem key={tz} value={tz} className="text-[13px]">
+                    {tz.replace(/_/g, " ")}
+                  </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="rounded-lg border border-border bg-card p-5">
+            <h3 className="text-[13px] font-semibold text-foreground mb-2">
+              Schedule details
+            </h3>
+            <div className="space-y-2 text-xs text-muted-foreground">
+              <p>
+                <span className="font-medium text-foreground">Name:</span>{" "}
+                {activeSchedule.name}
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Default:</span>{" "}
+                {activeSchedule.isDefault ? "Yes" : "No"}
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Active days:</span>{" "}
+                {activeSchedule.days.filter((d) => d.isEnabled).length}/7
+              </p>
+              <p>
+                <span className="font-medium text-foreground">Overrides:</span>{" "}
+                {activeSchedule.dateOverrides.length}
+              </p>
             </div>
           </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
 
       {/* Add Override Dialog */}
       <Dialog open={overrideDialogOpen} onOpenChange={setOverrideDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle>Add date override</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-base">Add date override</DialogTitle>
+            <DialogDescription className="text-[13px]">
               Block a specific date or set custom available hours.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 pt-2">
             <div>
-              <Label>Date</Label>
+              <Label className="text-[13px]">Date</Label>
               <Input
                 type="date"
                 value={overrideForm.date}
@@ -481,10 +494,11 @@ export default function AvailabilityPage() {
                   setOverrideForm({ ...overrideForm, date: e.target.value })
                 }
                 min={new Date().toISOString().split("T")[0]}
+                className="mt-1.5 text-[13px]"
               />
             </div>
             <div>
-              <Label>Type</Label>
+              <Label className="text-[13px]">Type</Label>
               <Select
                 value={overrideForm.isBlocked ? "blocked" : "custom"}
                 onValueChange={(v) =>
@@ -494,23 +508,19 @@ export default function AvailabilityPage() {
                   })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="mt-1.5 text-[13px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="blocked">
-                    Block entire day
-                  </SelectItem>
-                  <SelectItem value="custom">
-                    Set custom hours
-                  </SelectItem>
+                  <SelectItem value="blocked">Block entire day</SelectItem>
+                  <SelectItem value="custom">Custom hours</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {!overrideForm.isBlocked && (
-              <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <Label>Start</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-[13px]">Start</Label>
                   <Input
                     type="time"
                     value={overrideForm.startTime}
@@ -520,10 +530,11 @@ export default function AvailabilityPage() {
                         startTime: e.target.value,
                       })
                     }
+                    className="mt-1.5 text-[13px]"
                   />
                 </div>
-                <div className="flex-1">
-                  <Label>End</Label>
+                <div>
+                  <Label className="text-[13px]">End</Label>
                   <Input
                     type="time"
                     value={overrideForm.endTime}
@@ -533,65 +544,59 @@ export default function AvailabilityPage() {
                         endTime: e.target.value,
                       })
                     }
+                    className="mt-1.5 text-[13px]"
                   />
                 </div>
               </div>
             )}
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                variant="outline"
-                onClick={() => setOverrideDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleAddOverride}>Add override</Button>
-            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-3 border-t border-border">
+            <Button variant="outline" onClick={() => setOverrideDialogOpen(false)} className="text-[13px]">
+              Cancel
+            </Button>
+            <Button onClick={handleAddOverride} className="text-[13px]">
+              Add override
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* New Schedule Dialog */}
-      <Dialog
-        open={newScheduleDialogOpen}
-        onOpenChange={setNewScheduleDialogOpen}
-      >
-        <DialogContent className="sm:max-w-sm">
+      <Dialog open={newScheduleDialogOpen} onOpenChange={setNewScheduleDialogOpen}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
           <DialogHeader>
-            <DialogTitle>New availability schedule</DialogTitle>
-            <DialogDescription>
-              Create a new schedule with different hours.
+            <DialogTitle className="text-base">New schedule</DialogTitle>
+            <DialogDescription className="text-[13px]">
+              Create a new availability schedule.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div>
-              <Label>Schedule name</Label>
-              <Input
-                placeholder="e.g. Evening Hours"
-                value={newScheduleName}
-                onChange={(e) => setNewScheduleName(e.target.value)}
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setNewScheduleDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleCreateSchedule}>Create</Button>
-            </div>
+          <div className="pt-2">
+            <Label className="text-[13px]">Schedule name</Label>
+            <Input
+              placeholder="e.g. Evening hours"
+              value={newScheduleName}
+              onChange={(e) => setNewScheduleName(e.target.value)}
+              className="mt-1.5 text-[13px]"
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-3 border-t border-border">
+            <Button variant="outline" onClick={() => setNewScheduleDialogOpen(false)} className="text-[13px]">
+              Cancel
+            </Button>
+            <Button onClick={handleCreateSchedule} className="text-[13px]">
+              Create
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
       {/* Delete Schedule Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete schedule?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete "{activeSchedule.name}". This action
-              cannot be undone.
+            <AlertDialogTitle>Delete this schedule?</AlertDialogTitle>
+            <AlertDialogDescription className="text-[13px]">
+              This action cannot be undone. Event types using this schedule will fall back to the default.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
