@@ -49,9 +49,7 @@ export default function AppSidebar() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("cal-clone-auth");
-    toast.success("Signed out");
-    navigate("/login");
+    toast.info("Default user — no logout needed");
   };
 
   const isActive = (path: string) =>

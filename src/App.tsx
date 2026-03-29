@@ -6,9 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect } from "react";
 import { initializeStore } from "@/lib/store";
 
-import LoginPage from "./pages/LoginPage";
-import SignupPage from "./pages/SignupPage";
-import ForgotPasswordPage from "./pages/ForgotPasswordPage";
 import EventTypesPage from "./pages/EventTypesPage";
 import AvailabilityPage from "./pages/AvailabilityPage";
 import BookingsPage from "./pages/BookingsPage";
@@ -37,9 +34,9 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Navigate to="/event-types" replace />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/login" element={<Navigate to="/event-types" replace />} />
+            <Route path="/signup" element={<Navigate to="/event-types" replace />} />
+            <Route path="/forgot-password" element={<Navigate to="/event-types" replace />} />
             <Route path="/event-types" element={<EventTypesPage />} />
             <Route path="/availability" element={<AvailabilityPage />} />
             <Route path="/bookings" element={<BookingsPage />} />
