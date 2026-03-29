@@ -8,12 +8,12 @@ import {
   Pencil,
   Trash2,
   Clock,
+  Share2,
+  EyeOff,
   Files,
+  Shield,
   Search,
   Link as LinkIcon,
-  GripVertical,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { EventType, EVENT_COLORS, DURATION_OPTIONS, BUFFER_OPTIONS, CustomQuestion } from "@/lib/types";
@@ -230,22 +230,22 @@ export default function EventTypesPage() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-xl font-bold text-foreground tracking-tight">Event Types</h1>
-          <p className="text-[13px] text-muted-foreground mt-1">
-            Create events to share for people to book on your calendar.
+          <h1 className="text-xl font-bold text-foreground">Event types</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Configure different events for people to book on your calendar.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative hidden sm:block">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
-              placeholder="Search event types..."
+              placeholder="Search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 w-48 h-9 text-[13px] bg-secondary border-border"
+              className="pl-8 w-44 h-9 text-sm bg-secondary border-border"
             />
           </div>
-          <Button onClick={openCreate} size="sm" className="gap-1.5 h-9 text-[13px]">
+          <Button onClick={openCreate} size="sm" className="gap-1.5 h-9">
             <Plus className="h-4 w-4" />
             New
           </Button>
@@ -253,16 +253,16 @@ export default function EventTypesPage() {
       </div>
 
       {/* Event Types List */}
-      <div className="rounded-lg border border-border overflow-hidden bg-card">
+      <div className="cal-card overflow-hidden divide-y divide-border">
         {filtered.length === 0 && eventTypes.length === 0 && (
-          <div className="px-6 py-20 text-center">
-            <div className="mx-auto w-14 h-14 rounded-full bg-secondary flex items-center justify-center mb-4">
-              <LinkIcon className="h-6 w-6 text-muted-foreground" />
+          <div className="px-6 py-16 text-center">
+            <div className="mx-auto w-12 h-12 rounded-full bg-secondary flex items-center justify-center mb-3">
+              <LinkIcon className="h-5 w-5 text-muted-foreground" />
             </div>
-            <p className="text-sm font-semibold text-foreground mb-1">
+            <p className="text-sm font-medium text-foreground mb-1">
               No event types yet
             </p>
-            <p className="text-[13px] text-muted-foreground mb-5 max-w-sm mx-auto">
+            <p className="text-sm text-muted-foreground mb-4">
               Create your first event type to start accepting bookings.
             </p>
             <Button onClick={openCreate} variant="outline" size="sm" className="gap-1.5">
@@ -273,66 +273,45 @@ export default function EventTypesPage() {
         )}
         {filtered.length === 0 && eventTypes.length > 0 && (
           <div className="px-6 py-12 text-center">
-            <p className="text-sm text-muted-foreground">No event types match your search.</p>
+            <p className="text-sm text-muted-foreground">No matching event types.</p>
           </div>
         )}
 
-        {/* Active event types */}
-        {activeTypes.length > 0 && (
-          <div className="divide-y divide-border">
-            {activeTypes.map((et) => (
-              <EventTypeRow
-                key={et.id}
-                et={et}
-                profile={profile}
-                onEdit={openEdit}
-                onToggle={handleToggle}
-                onDelete={confirmDelete}
-                onDuplicate={handleDuplicate}
-                onCopyLink={copyLink}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Hidden / inactive */}
-        {inactiveTypes.length > 0 && (
-          <>
-            <div className="px-5 py-2.5 bg-secondary/50 border-t border-border flex items-center gap-2">
-              <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Hidden
-              </span>
-              <span className="text-[11px] text-muted-foreground">
-                ({inactiveTypes.length})
-              </span>
-            </div>
-            <div className="divide-y divide-border">
-              {inactiveTypes.map((et) => (
-                <EventTypeRow
-                  key={et.id}
-                  et={et}
-                  profile={profile}
-                  onEdit={openEdit}
-                  onToggle={handleToggle}
-                  onDelete={confirmDelete}
-                  onDuplicate={handleDuplicate}
-                  onCopyLink={copyLink}
-                />
-              ))}
-            </div>
-          </>
-        )}
+        {/* Inactive first (like Cal.com shows hidden on top) */}
+        {inactiveTypes.map((et) => (
+          <EventTypeRow
+            key={et.id}
+            et={et}
+            profile={profile}
+            onEdit={openEdit}
+            onToggle={handleToggle}
+            onDelete={confirmDelete}
+            onDuplicate={handleDuplicate}
+            onCopyLink={copyLink}
+          />
+        ))}
+        {activeTypes.map((et) => (
+          <EventTypeRow
+            key={et.id}
+            et={et}
+            profile={profile}
+            onEdit={openEdit}
+            onToggle={handleToggle}
+            onDelete={confirmDelete}
+            onDuplicate={handleDuplicate}
+            onCopyLink={copyLink}
+          />
+        ))}
       </div>
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto bg-card border-border">
           <DialogHeader>
-            <DialogTitle className="text-base">
-              {editing ? "Edit event type" : "Add a new event type"}
+            <DialogTitle>
+              {editing ? "Edit event type" : "New event type"}
             </DialogTitle>
-            <DialogDescription className="text-[13px]">
+            <DialogDescription>
               {editing
                 ? "Update the details for this event type."
                 : "Create a new event type for people to book."}
@@ -341,14 +320,14 @@ export default function EventTypesPage() {
 
           <Tabs defaultValue="general" className="mt-1">
             <TabsList className="grid grid-cols-3 w-full bg-secondary">
-              <TabsTrigger value="general" className="text-[13px]">General</TabsTrigger>
-              <TabsTrigger value="advanced" className="text-[13px]">Advanced</TabsTrigger>
-              <TabsTrigger value="questions" className="text-[13px]">Questions</TabsTrigger>
+              <TabsTrigger value="general">General</TabsTrigger>
+              <TabsTrigger value="advanced">Advanced</TabsTrigger>
+              <TabsTrigger value="questions">Questions</TabsTrigger>
             </TabsList>
 
             <TabsContent value="general" className="space-y-4 pt-3">
               <div>
-                <Label className="text-[13px]">Title *</Label>
+                <Label>Title *</Label>
                 <Input
                   placeholder="Quick Chat"
                   value={form.title}
@@ -364,41 +343,41 @@ export default function EventTypesPage() {
                             .replace(/^-|-$/g, ""),
                     });
                   }}
-                  className="mt-1.5 text-[13px]"
+                  className="mt-1"
                 />
               </div>
               <div>
-                <Label className="text-[13px]">URL *</Label>
-                <div className="flex items-center gap-0 mt-1.5">
-                  <span className="text-[13px] text-muted-foreground bg-secondary border border-r-0 border-border rounded-l-md px-3 py-2 h-10 flex items-center whitespace-nowrap">
-                    cal.com/{profile.username}/
+                <Label>URL Slug *</Label>
+                <div className="flex items-center gap-0 mt-1">
+                  <span className="text-sm text-muted-foreground bg-secondary border border-r-0 border-border rounded-l-md px-3 py-2 h-10 flex items-center">
+                    /{profile.username}/
                   </span>
                   <Input
                     placeholder="quick-chat"
                     value={form.slug}
                     onChange={(e) => setForm({ ...form, slug: e.target.value })}
-                    className="rounded-l-none text-[13px]"
+                    className="rounded-l-none"
                   />
                 </div>
               </div>
               <div>
-                <Label className="text-[13px]">Description</Label>
+                <Label>Description</Label>
                 <Textarea
                   placeholder="A brief description of this event..."
                   value={form.description}
                   onChange={(e) => setForm({ ...form, description: e.target.value })}
                   rows={3}
-                  className="mt-1.5 text-[13px]"
+                  className="mt-1"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-[13px]">Duration</Label>
+                  <Label>Duration</Label>
                   <Select
                     value={String(form.duration)}
                     onValueChange={(v) => setForm({ ...form, duration: Number(v) })}
                   >
-                    <SelectTrigger className="mt-1.5 text-[13px]">
+                    <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -411,8 +390,8 @@ export default function EventTypesPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-[13px]">Color</Label>
-                  <div className="flex gap-1.5 mt-2.5 flex-wrap">
+                  <Label>Color</Label>
+                  <div className="flex gap-1.5 mt-2 flex-wrap">
                     {EVENT_COLORS.map((c) => (
                       <button
                         key={c}
@@ -434,12 +413,12 @@ export default function EventTypesPage() {
             <TabsContent value="advanced" className="space-y-4 pt-3">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-[13px]">Buffer before</Label>
+                  <Label>Buffer before</Label>
                   <Select
                     value={String(form.bufferBefore)}
                     onValueChange={(v) => setForm({ ...form, bufferBefore: Number(v) })}
                   >
-                    <SelectTrigger className="mt-1.5 text-[13px]">
+                    <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -452,12 +431,12 @@ export default function EventTypesPage() {
                   </Select>
                 </div>
                 <div>
-                  <Label className="text-[13px]">Buffer after</Label>
+                  <Label>Buffer after</Label>
                   <Select
                     value={String(form.bufferAfter)}
                     onValueChange={(v) => setForm({ ...form, bufferAfter: Number(v) })}
                   >
-                    <SelectTrigger className="mt-1.5 text-[13px]">
+                    <SelectTrigger className="mt-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -471,8 +450,8 @@ export default function EventTypesPage() {
                 </div>
               </div>
               <div>
-                <Label className="text-[13px]">Minimum notice (hours)</Label>
-                <p className="text-xs text-muted-foreground mb-1.5">
+                <Label>Minimum notice (hours)</Label>
+                <p className="text-xs text-muted-foreground mb-1">
                   How far in advance must bookings be made?
                 </p>
                 <Input
@@ -481,12 +460,11 @@ export default function EventTypesPage() {
                   max={720}
                   value={form.minNotice}
                   onChange={(e) => setForm({ ...form, minNotice: Number(e.target.value) })}
-                  className="text-[13px]"
                 />
               </div>
               <div>
-                <Label className="text-[13px]">Booking window (days)</Label>
-                <p className="text-xs text-muted-foreground mb-1.5">
+                <Label>Booking window (days)</Label>
+                <p className="text-xs text-muted-foreground mb-1">
                   How far into the future can someone book?
                 </p>
                 <Input
@@ -495,14 +473,13 @@ export default function EventTypesPage() {
                   max={365}
                   value={form.maxFutureDays}
                   onChange={(e) => setForm({ ...form, maxFutureDays: Number(e.target.value) })}
-                  className="text-[13px]"
                 />
               </div>
             </TabsContent>
 
             <TabsContent value="questions" className="space-y-4 pt-3">
-              <p className="text-[13px] text-muted-foreground">
-                Add custom questions to collect information from the person booking.
+              <p className="text-sm text-muted-foreground">
+                Add custom questions to collect info from the booker.
               </p>
               {form.customQuestions.map((q, idx) => (
                 <div key={q.id} className="border border-border rounded-lg p-3 space-y-2 bg-secondary/30">
@@ -511,7 +488,7 @@ export default function EventTypesPage() {
                       placeholder="Question label"
                       value={q.label}
                       onChange={(e) => updateQuestion(idx, { label: e.target.value })}
-                      className="flex-1 text-[13px]"
+                      className="flex-1"
                     />
                     <Button
                       variant="ghost"
@@ -560,7 +537,7 @@ export default function EventTypesPage() {
                   )}
                 </div>
               ))}
-              <Button variant="outline" size="sm" onClick={addQuestion} className="gap-1.5 text-[13px]">
+              <Button variant="outline" size="sm" onClick={addQuestion} className="gap-1.5">
                 <Plus className="h-3.5 w-3.5" />
                 Add question
               </Button>
@@ -568,11 +545,11 @@ export default function EventTypesPage() {
           </Tabs>
 
           <div className="flex justify-end gap-2 pt-3 border-t border-border">
-            <Button variant="outline" onClick={() => setDialogOpen(false)} className="text-[13px]">
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave} className="text-[13px]">
-              {editing ? "Save changes" : "Create"}
+            <Button onClick={handleSave}>
+              {editing ? "Save" : "Create"}
             </Button>
           </div>
         </DialogContent>
@@ -583,8 +560,8 @@ export default function EventTypesPage() {
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Delete event type?</AlertDialogTitle>
-            <AlertDialogDescription className="text-[13px]">
-              This action cannot be undone. Anyone with the booking link will no longer be able to book this event.
+            <AlertDialogDescription>
+              This action cannot be undone. Anyone with the link will no longer be able to book.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -622,109 +599,72 @@ function EventTypeRow({
   onCopyLink: (slug: string) => void;
 }) {
   return (
-    <div
-      className={`flex items-center group transition-colors ${
-        et.isActive ? "hover:bg-secondary/30" : "opacity-60 hover:opacity-80"
-      }`}
-    >
-      {/* Color indicator bar */}
-      <div
-        className="w-1 self-stretch rounded-l-sm shrink-0"
-        style={{ backgroundColor: et.color }}
-      />
-
-      <div className="flex items-center justify-between flex-1 px-4 py-3.5 min-w-0">
-        {/* Left: drag + info */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <GripVertical className="h-4 w-4 text-muted-foreground/30 shrink-0 cursor-grab hidden group-hover:block" />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onEdit(et)}
-                className="text-sm font-semibold text-foreground hover:underline truncate"
-              >
-                {et.title}
-              </button>
-              {!et.isActive && (
-                <span className="text-[10px] font-medium text-muted-foreground bg-secondary px-1.5 py-0.5 rounded">
-                  Hidden
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-3 mt-0.5">
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Clock className="h-3 w-3" />
-                {et.duration}m
-              </span>
-              <span className="text-xs text-muted-foreground font-mono truncate">
-                /{profile.username}/{et.slug}
-              </span>
-            </div>
-            {et.description && (
-              <p className="text-xs text-muted-foreground mt-0.5 truncate max-w-md">
-                {et.description}
-              </p>
-            )}
-          </div>
+    <div className="flex items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors group">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-0.5">
+          <h3 className="text-sm font-bold text-foreground">{et.title}</h3>
+          <span className="text-xs text-muted-foreground font-mono">
+            /{profile.username}/{et.slug}
+          </span>
         </div>
+        <div className="flex items-center gap-2">
+          <span className="cal-badge bg-secondary text-muted-foreground">
+            <Clock className="h-3 w-3 mr-1" />
+            {et.duration}m
+          </span>
+        </div>
+      </div>
 
-        {/* Right: actions */}
-        <div className="flex items-center gap-1 shrink-0 ml-4">
-          <div className="hidden group-hover:flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              onClick={() => onCopyLink(et.slug)}
-              title="Copy link"
-            >
-              <LinkIcon className="h-3.5 w-3.5" />
+      <div className="flex items-center gap-1.5 shrink-0">
+        {!et.isActive && (
+          <span className="text-xs text-muted-foreground mr-2 font-medium">Hidden</span>
+        )}
+        <Switch
+          checked={et.isActive}
+          onCheckedChange={() => onToggle(et)}
+        />
+        <Link to={`/book/${et.slug}`} target="_blank">
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+            <ExternalLink className="h-4 w-4" />
+          </Button>
+        </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+          onClick={() => onCopyLink(et.slug)}
+        >
+          <LinkIcon className="h-4 w-4" />
+        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+              <MoreHorizontal className="h-4 w-4" />
             </Button>
-            <Link to={`/book/${et.slug}`} target="_blank">
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" title="Preview">
-                <ExternalLink className="h-3.5 w-3.5" />
-              </Button>
-            </Link>
-          </div>
-          <Switch
-            checked={et.isActive}
-            onCheckedChange={() => onToggle(et)}
-            className="mx-1"
-          />
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44 bg-popover border-border">
-              <DropdownMenuItem onClick={() => onEdit(et)} className="text-[13px]">
-                <Pencil className="h-4 w-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onDuplicate(et.id)} className="text-[13px]">
-                <Files className="h-4 w-4 mr-2" />
-                Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onCopyLink(et.slug)} className="text-[13px]">
-                <Copy className="h-4 w-4 mr-2" />
-                Copy link
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => onToggle(et)} className="text-[13px]">
-                {et.isActive ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
-                {et.isActive ? "Hide" : "Show"}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => onDelete(et.id)}
-                className="text-destructive focus:text-destructive text-[13px]"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44 bg-popover border-border">
+            <DropdownMenuItem onClick={() => onEdit(et)}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDuplicate(et.id)}>
+              <Files className="h-4 w-4 mr-2" />
+              Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onCopyLink(et.slug)}>
+              <Copy className="h-4 w-4 mr-2" />
+              Copy link
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => onDelete(et.id)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </div>
   );
