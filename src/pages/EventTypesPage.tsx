@@ -88,6 +88,12 @@ export default function EventTypesPage() {
     setEventTypes(getEventTypes());
   }, []);
 
+  useEffect(() => {
+    const openCreateDialog = () => setDialogOpen(true);
+    window.addEventListener("cal:create-event-type", openCreateDialog);
+    return () => window.removeEventListener("cal:create-event-type", openCreateDialog);
+  }, []);
+
   const refresh = () => setEventTypes(getEventTypes());
 
   const openCreate = () => {
@@ -235,8 +241,8 @@ export default function EventTypesPage() {
             Configure different events for people to book on your calendar.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="relative hidden sm:block">
+        <div className="hidden items-center gap-2 sm:flex">
+          <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
               placeholder="Search"
@@ -249,6 +255,18 @@ export default function EventTypesPage() {
             <Plus className="h-4 w-4" />
             New
           </Button>
+        </div>
+      </div>
+
+      <div className="fixed bottom-20 left-1/2 z-30 w-[calc(100%-5rem)] max-w-sm -translate-x-1/2 sm:hidden">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="h-10 rounded-full bg-card pl-9 border-border"
+          />
         </div>
       </div>
 
@@ -350,7 +368,7 @@ export default function EventTypesPage() {
                 <Label>URL Slug *</Label>
                 <div className="flex items-center gap-0 mt-1">
                   <span className="text-sm text-muted-foreground bg-secondary border border-r-0 border-border rounded-l-md px-3 py-2 h-10 flex items-center">
-                    /{profile.username}/
+                    /book/
                   </span>
                   <Input
                     placeholder="quick-chat"
@@ -599,12 +617,17 @@ function EventTypeRow({
   onCopyLink: (slug: string) => void;
 }) {
   return (
-    <div className="flex items-center justify-between px-5 py-4 hover:bg-secondary/30 transition-colors group">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-0.5">
-          <h3 className="text-sm font-bold text-foreground">{et.title}</h3>
-          <span className="text-xs text-muted-foreground font-mono">
-            /{profile.username}/{et.slug}
+    <div className="group flex items-start justify-between gap-3 px-4 py-4 hover:bg-secondary/30 transition-colors sm:px-5 sm:py-4">
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2 mb-1 min-w-0">
+          <h3 className="truncate text-sm font-bold text-foreground">{et.title}</h3>
+          {!et.isActive && (
+            <span className="shrink-0 text-xs font-medium text-muted-foreground sm:hidden">
+              Hidden
+            </span>
+          )}
+          <span className="hidden text-xs text-muted-foreground font-mono sm:inline">
+            /book/{et.slug}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -615,7 +638,43 @@ function EventTypeRow({
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5 shrink-0">
+      <div className="flex items-center gap-1.5 shrink-0 sm:hidden">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44 bg-popover border-border">
+            <DropdownMenuItem onClick={() => onEdit(et)}>
+              <Pencil className="h-4 w-4 mr-2" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onDuplicate(et.id)}>
+              <Files className="h-4 w-4 mr-2" />
+              Duplicate
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onCopyLink(et.slug)}>
+              <LinkIcon className="h-4 w-4 mr-2" />
+              Copy link
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => onToggle(et)}>
+              <Shield className="h-4 w-4 mr-2" />
+              {et.isActive ? "Hide" : "Show"}
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => onDelete(et.id)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      <div className="hidden items-center gap-1.5 shrink-0 sm:flex">
         {!et.isActive && (
           <span className="text-xs text-muted-foreground mr-2 font-medium">Hidden</span>
         )}

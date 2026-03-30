@@ -124,6 +124,8 @@ export default function EventTypesPage() {
     setDialogOpen(true);
   };
 
+
+  
   const handleSave = () => {
     if (!form.title.trim() || !form.slug.trim()) {
       toast.error("Title and URL slug are required");
@@ -190,6 +192,7 @@ export default function EventTypesPage() {
 
   const copyLink = (slug: string) => {
     navigator.clipboard.writeText(`${window.location.origin}/book/${slug}`);
+
     toast.success("Link copied to clipboard");
   };
 

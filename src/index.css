@@ -7,7 +7,7 @@
   :root {
     --background: 0 0% 4%;
     --foreground: 0 0% 95%;
-    --card: 0 0% 7%;
+    --card: 0 0% 4%;
     --card-foreground: 0 0% 95%;
     --popover: 0 0% 8%;
     --popover-foreground: 0 0% 95%;
@@ -34,11 +34,11 @@
     --cal-info: 217 91% 60%;
     --cal-warning: 38 92% 50%;
     --cal-error: 0 72% 51%;
-    --sidebar-background: 0 0% 5%;
+    --sidebar-background: 0 0% 9%;
     --sidebar-foreground: 0 0% 65%;
     --sidebar-primary: 0 0% 100%;
     --sidebar-primary-foreground: 0 0% 4%;
-    --sidebar-accent: 0 0% 11%;
+    --sidebar-accent: 0 0% 25%;
     --sidebar-accent-foreground: 0 0% 90%;
     --sidebar-border: 0 0% 11%;
     --sidebar-ring: 0 0% 25%;
