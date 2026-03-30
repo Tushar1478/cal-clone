@@ -125,7 +125,7 @@ The focus was on **real-world product behavior**, **clean UI/UX**, and **functio
 
 ### 🏠Settings
 
-![Dashboard](./screenshots/Screenshot 2026-03-29 004802.png)
+![Dashboard](./screenshots/settings.png)
 
 ### 📱 Mobile View
 
