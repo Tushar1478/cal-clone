@@ -110,11 +110,6 @@ The focus was on **real-world product behavior**, **clean UI/UX**, and **functio
 
 ## 📸 Screenshots
 
-> Add your screenshots inside a `/screenshots` folder
-
-### 🏠 Dashboard
-
-![Dashboard](./screenshots/dashboard.png)
 
 ### 📅 Event Types
 
@@ -127,6 +122,10 @@ The focus was on **real-world product behavior**, **clean UI/UX**, and **functio
 ### 🌐 Availability Page
 
 ![Availability](./screenshots/availability.png)
+
+### 🏠Booking a slot
+
+![Dashboard](./screenshots/image.png)
 
 ### 📱 Mobile View
 
