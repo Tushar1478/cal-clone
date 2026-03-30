@@ -1,59 +1,221 @@
-# Cal Clone
+# 📅 Cal.com Clone – Fullstack Scheduling Platform
 
-A simple and responsive clone of the **Cal.com** calendar UI, built to practice modern frontend development and UI/UX skills.
+A fullstack scheduling and booking application inspired by Cal.com, built as part of an SDE Intern Fullstack assignment.
 
-## Features
+---
 
-- Calendar view with days, weeks, and months styled similar to Cal.com.
-- Clean, minimal UI with focus on readability and spacing.
-- Responsive layout that works on desktop and mobile screens.
-- Reusable components for calendar header, grid, and events (if implemented).
-- Built as a learning project to improve HTML/CSS/JS skills.
+## 🔗 Live Demo
 
-## Tech Stack
+👉 [https://cal-beige-one.vercel.app/event-types]
 
-- HTML5 for basic structure.
-- CSS3 (Flexbox/Grid) for layout and styling.
-- JavaScript for interactive behavior.
-- Git & GitHub for version control and hosting.
+## 📦 Repository
 
-## Getting Started
+👉 https://github.com/Tushar1478/cal-clone
 
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Tushar1478/cal-clone.git
-   ```
-2. Navigate into the project:
-   ```bash
-   cd cal-clone
-   ```
-3. Open the main HTML file in your browser (e.g., `index.html`).
+---
 
-No build step is required if this is a pure HTML/CSS/JS project.
+## 🧠 Overview
 
-## Project Structure
+This project replicates the core functionality and user experience of a modern scheduling platform like Cal.com.
 
-- `index.html` – Main entry point for the calendar UI.
-- `styles/` – Stylesheets for layout, colors, and components.
-- `scripts/` – JavaScript files for interactions.
-- `assets/` – Images, icons, or other static assets.
+Users can:
 
-*(Update these paths and filenames to match your actual project.)*
+* Create event types
+* Define availability
+* Share booking links
+* Allow others to book time slots
 
-## Future Improvements
+The focus was on **real-world product behavior**, **clean UI/UX**, and **functional scheduling logic**.
 
-- Add real event data and event creation UI.
-- Integrate with a backend or calendar API.
-- Support dark mode.
-- Improve accessibility (keyboard navigation, ARIA labels).
+---
 
-## Contributing
+## ⚙️ Tech Stack
 
-Contributions, suggestions, and issues are welcome.  
-Feel free to fork the repo, create a branch, and open a pull request.
+### Frontend
 
-## License
+* React.js (TypeScript)
+* Tailwind CSS
+* Vite
 
-This project is for educational purposes.  
-You can adapt it for your own learning or portfolio.  
-For any other usage, please open an issue to discuss.
+### Backend
+
+* Node.js (API handling)
+
+### Database
+
+* PostgreSQL (via Supabase)
+
+### Tools
+
+* AI-assisted development (ChatGPT, Gemini, etc.) for UI replication and debugging
+
+---
+
+## ✨ Features
+
+### ✅ Core Features
+
+#### 📌 Event Types Management
+
+* Create, edit, and delete event types
+* Define duration, description, and unique booking URL
+
+#### ⏰ Availability Settings
+
+* Configure available days and time slots
+* Basic availability logic for scheduling
+
+#### 🌐 Public Booking Page
+
+* Calendar-based date selection
+* Dynamic time slot generation
+* Booking form (name + email)
+
+#### 📊 Booking System
+
+* Store bookings in database
+* Basic conflict handling
+* Booking confirmation UI
+
+---
+
+### ⚡ Bonus Features
+
+* 📱 Fully responsive design (mobile + desktop layouts)
+* 🎨 UI closely matches Cal.com
+* 🧩 Modular component-based architecture
+
+---
+
+## 🚧 Limitations / Work in Progress
+
+* ❌ Email notifications not implemented
+* ❌ Some secondary features are mocked/demo-based
+* ❌ Advanced edge cases (double booking race conditions) not fully handled
+
+> Core scheduling flow is fully functional.
+
+---
+
+## 🧱 Application Flow
+
+1. Admin creates event type
+2. Availability is configured
+3. Public booking link is generated
+4. User selects date & time
+5. Booking stored in PostgreSQL (Supabase)
+6. Confirmation displayed
+
+---
+
+## 📸 Screenshots
+
+> Add your screenshots inside a `/screenshots` folder
+
+### 🏠 Dashboard
+
+![Dashboard](./screenshots/dashboard.png)
+
+### 📅 Event Types
+
+![Event Types](./screenshots/event-types.png)
+
+### 🌐 Booking Page
+
+![Booking](./screenshots/booking.png)
+
+### 📱 Mobile View
+
+![Mobile](./screenshots/mobile.png)
+
+---
+
+## 🗄️ Database Design
+
+Entities:
+
+* Event Types
+* Availability
+* Bookings
+
+Relationships:
+
+* Event → Availability
+* Event → Bookings
+
+---
+
+## 🧪 Setup Instructions
+
+### 1. Clone repo
+
+```bash
+git clone https://github.com/Tushar1478/cal-clone.git
+cd cal-clone
+```
+
+### 2. Install dependencies
+
+```bash
+npm install
+```
+
+### 3. Setup environment variables
+
+Create `.env` file:
+
+```
+SUPABASE_URL=your_url
+SUPABASE_KEY=your_key
+DATABASE_URL=your_db_url
+```
+
+### 4. Run project
+
+```bash
+npm run dev
+```
+
+---
+
+## 🎯 Assignment Alignment
+
+This project implements key requirements from the assignment:
+
+* Event type creation and management
+* Availability configuration
+* Public booking page
+* Booking storage and display
+* Responsive UI similar to Cal.com
+
+---
+
+## 🧠 Learnings
+
+* Designing scheduling logic
+* Working with relational databases
+* Building responsive UI like production apps
+* Using AI tools effectively while maintaining code understanding
+
+---
+
+## 📌 Assumptions
+
+* Single user system (no authentication required)
+* Simplified timezone handling
+* Focus on core features first
+
+---
+
+## 🔮 Future Improvements
+
+* Email notifications
+* Authentication system
+* Rescheduling and cancellation flows
+* Better validation and error handling
+
+---
+
+## 🙌 Acknowledgement
+
+Inspired by Cal.com and built as part of a fullstack engineering assignment.
