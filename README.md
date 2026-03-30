@@ -124,6 +124,10 @@ The focus was on **real-world product behavior**, **clean UI/UX**, and **functio
 
 ![Booking](./screenshots/booking.png)
 
+### 🌐 Availability Page
+
+![Availability](./screenshots/availability.png)
+
 ### 📱 Mobile View
 
 ![Mobile](./screenshots/mobile.png)
