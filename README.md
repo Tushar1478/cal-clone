@@ -6,7 +6,7 @@ A fullstack scheduling and booking application inspired by Cal.com, built as par
 
 ## 🔗 Live Demo
 
-👉 [https://cal-beige-one.vercel.app/event-types]
+👉 [https://cal-beige-one.vercel.app/]
 
 ## 📦 Repository
 
