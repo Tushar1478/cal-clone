@@ -169,7 +169,7 @@ export default function SettingsPage() {
     toast.success("Settings saved");
   };
 
-  const publicUrl = `${window.location.origin}/${profile.username}`;
+  const publicUrl = `${window.location.origin}/public`;
 
   const filteredPersonal = personalSettings.filter(
     (s) =>

@@ -368,7 +368,7 @@ export default function EventTypesPage() {
                 <Label>URL Slug *</Label>
                 <div className="flex items-center gap-0 mt-1">
                   <span className="text-sm text-muted-foreground bg-secondary border border-r-0 border-border rounded-l-md px-3 py-2 h-10 flex items-center">
-                    /{profile.username}/
+                    /book/
                   </span>
                   <Input
                     placeholder="quick-chat"
@@ -627,7 +627,7 @@ function EventTypeRow({
             </span>
           )}
           <span className="hidden text-xs text-muted-foreground font-mono sm:inline">
-            /{profile.username}/{et.slug}
+            /book/{et.slug}
           </span>
         </div>
         <div className="flex items-center gap-2">

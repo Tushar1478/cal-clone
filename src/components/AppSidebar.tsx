@@ -44,7 +44,7 @@ export default function AppSidebar() {
   const profile = getProfile();
 
   const copyPublicLink = () => {
-    navigator.clipboard.writeText(`${window.location.origin}/${profile.username}`);
+    navigator.clipboard.writeText(`${window.location.origin}/public`);
     toast.success("Link copied to clipboard");
   };
 

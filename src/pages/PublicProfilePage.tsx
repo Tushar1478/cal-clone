@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import DashboardLayout from "@/components/DashboardLayout";
 import { getEventTypes, getProfile } from "@/lib/store";
 import { EventType } from "@/lib/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Clock, ArrowRight } from "lucide-react";
 
 export default function PublicProfilePage() {
