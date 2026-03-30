@@ -252,7 +252,13 @@ function saveToStorage<T>(key: string, data: T): void {
 // ─── Initialize ────────────────────────────────────────────
 
 export function initializeStore() {
-  if (!localStorage.getItem(STORAGE_KEYS.eventTypes)) {
+  // Validate existing data — if corrupt or missing, reset everything
+  const eventTypesRaw = loadFromStorage<EventType[]>(STORAGE_KEYS.eventTypes);
+  const availRaw = loadFromStorage<AvailabilitySchedule[]>(STORAGE_KEYS.availability);
+  
+  const needsReset = !Array.isArray(eventTypesRaw) || !Array.isArray(availRaw);
+  
+  if (needsReset) {
     const eventTypes = getDefaultEventTypes();
     saveToStorage(STORAGE_KEYS.eventTypes, eventTypes);
     saveToStorage(STORAGE_KEYS.bookings, getDefaultBookings(eventTypes));
